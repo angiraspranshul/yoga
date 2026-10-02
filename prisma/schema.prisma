@@ -1,0 +1,89 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+model Plan {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String
+  price       Float
+  currency    String   @default("INR") // Default INR for Dhaarna Sharma, with USD display
+  priceUsd    Float    @default(45)
+  duration    String   // e.g. "60 Mins", "4 Weeks", "Monthly Batch"
+  type        String   // "PRIVATE", "BATCH", "WORKSHOP", "MEMBERSHIP"
+  level       String   // "BEGINNER", "ALL_LEVELS", "INTERMEDIATE"
+  features    String   // JSON array of included features
+  imageUrl    String?
+  badge       String?  // e.g. "LIMITED SPOTS", "MOST POPULAR", "SIGNATURE BATCH"
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  orders      Order[]
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  fullName  String
+  email     String
+  phone     String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
+model Order {
+  id             String   @id @default(cuid())
+  planId         String
+  plan           Plan     @relation(fields: [planId], references: [id])
+  clientId       String
+  client         Client   @relation(fields: [clientId], references: [id])
+  amount         Float
+  currency       String   @default("INR")
+  status         String   @default("NEW") // "NEW", "CONFIRMED", "COMPLETED", "CANCELLED"
+  paymentMethod  String   @default("DEMO_CHECKOUT") // "STRIPE", "DEMO_CHECKOUT", "UPI"
+  paymentStatus  String   @default("PAID")
+
+  // Yoga-Specific Intake Data
+  experienceLevel String? // "Beginner (New to Yoga)", "Intermediate", "Regular Practitioner"
+  healthNotes     String? // Spinal stiffness, lower back pain, wrist/knee sensitivities
+  preferredSlot   String? // "Morning 7:00 AM IST", "Evening 6:30 PM IST", "Weekend"
+  clientMessage   String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  orderId   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Settings {
+  id                 String  @id @default("default")
+  instructorName     String  @default("Dhaarna Sharma")
+  instagramHandle    String  @default("@yogawithdhaarna")
+  instagramUrl       String  @default("https://www.instagram.com/yogawithdhaarna")
+  notificationEmail  String  @default("dhaarna@yogawithdhaarna.com")
+  webhookUrl         String? // Optional Telegram or Discord webhook for mobile push
+  emailNotifications Boolean @default(true)
+  soundAlerts        Boolean @default(true)
+}
