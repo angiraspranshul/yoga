@@ -28,11 +28,6 @@ export default function HeroSection() {
             Find stillness.<br />Move with breath.
           </h1>
 
-          <p className="mt-6 text-base sm:text-lg text-cream/85 max-w-xl mx-auto font-sans font-light leading-relaxed">
-            Intimate live cohorts of 15 students and 1-on-1 personal mentorship.
-            Shaped by classical Hatha tradition and mindful biomechanics.
-          </p>
-
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               href="#classes"
