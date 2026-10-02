@@ -43,10 +43,6 @@ export default async function HomePage() {
             <h2 className="font-serif italic text-3xl sm:text-5xl text-olive">
               Choose your practice
             </h2>
-            <p className="text-sm text-olive/65 font-light font-sans">
-              Intimate live cohorts capped at 15 students and 1-on-1 personal mentorship.
-              Includes personal confidential health intake screening.
-            </p>
           </div>
 
           <PlanGrid initialPlans={plans} />
