@@ -6,8 +6,8 @@ import { Shield, Lock, Mail, ArrowRight, Loader2, Sparkles, Check } from 'lucide
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('dhaarna@yogawithdhaarna.com');
-  const [password, setPassword] = useState('admin_password_123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,9 +69,10 @@ export default function AdminLoginPage() {
               <input
                 type="email"
                 required
+                placeholder="name@yogawithdhaarna.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-neutral-500 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
               />
             </div>
           </div>
@@ -83,16 +84,25 @@ export default function AdminLoginPage() {
               <input
                 type="password"
                 required
+                placeholder="••••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-neutral-500 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
               />
             </div>
           </div>
 
-          <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[11px] text-neutral-400 flex items-center justify-between">
-            <span className="text-emerald-300 font-mono">Demo Admin Credentials:</span>
-            <span className="text-neutral-300 font-mono">admin_password_123</span>
+          <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
+            <span className="flex items-center gap-1.5 text-neutral-400 text-[11px]">
+              <Lock className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Encrypted instructor session</span>
+            </span>
+            <a
+              href="mailto:dhaarna@yogawithdhaarna.com?subject=Instructor%20Portal%20Access"
+              className="text-[11px] text-neutral-400 hover:text-white transition-colors"
+            >
+              Contact Support
+            </a>
           </div>
 
           <button

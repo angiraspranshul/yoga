@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       healthNotes,
       preferredSlot,
       clientMessage,
-      paymentMethod = 'DEMO_CHECKOUT',
+      paymentMethod = 'CARD',
     } = body;
 
     if (!planId || !fullName || !email) {
