@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { getPlanById, updatePlan, deletePlan } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }

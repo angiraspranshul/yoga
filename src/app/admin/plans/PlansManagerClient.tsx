@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plan } from '@/types';
 import {
   Package,
@@ -12,6 +13,7 @@ import {
   Clock,
   Sparkles,
   AlertCircle,
+  CheckCircle2,
   Eye,
   EyeOff,
   Star,
@@ -23,11 +25,14 @@ interface PlansManagerClientProps {
 }
 
 export default function PlansManagerClient({ initialPlans }: PlansManagerClientProps) {
+  const router = useRouter();
   const [plans, setPlans] = useState<Plan[]>(initialPlans);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -141,6 +146,11 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
       }
 
       setIsModalOpen(false);
+      setNotice({
+        type: 'success',
+        message: editingPlan ? 'Plan successfully updated and synchronized with frontend.' : 'New plan created and published.',
+      });
+      router.refresh();
     } catch (err: any) {
       setError(err.message || 'Error saving plan');
     } finally {
@@ -155,24 +165,41 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !plan.isActive }),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setPlans(plans.map((p) => (p.id === updated.id ? updated : p)));
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to update visibility');
       }
-    } catch (e) {
+      setPlans(plans.map((p) => (p.id === data.id ? data : p)));
+      setNotice({
+        type: 'success',
+        message: data.isActive
+          ? `"${plan.title}" is now visible to students on the public website.`
+          : `"${plan.title}" has been hidden from public booking.`,
+      });
+      router.refresh();
+    } catch (e: any) {
       console.error('Failed to toggle status:', e);
+      setNotice({ type: 'error', message: e.message || 'Failed to toggle plan visibility.' });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this yoga plan offering?')) return;
+    if (!confirm('Are you sure you want to permanently delete this yoga plan offering?')) return;
+    setDeletingId(id);
     try {
       const res = await fetch(`/api/plans/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setPlans(plans.filter((p) => p.id !== id));
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete plan');
       }
-    } catch (e) {
+      setPlans(plans.filter((p) => p.id !== id));
+      setNotice({ type: 'success', message: 'Plan successfully deleted and removed from website.' });
+      router.refresh();
+    } catch (e: any) {
       console.error('Failed to delete:', e);
+      setNotice({ type: 'error', message: e.message || 'Failed to delete plan. Please try again.' });
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -200,6 +227,32 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
           <span>Add New Plan</span>
         </button>
       </div>
+
+      {/* Global Notice / Feedback Banner */}
+      {notice && (
+        <div
+          className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 transition-all ${
+            notice.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}
+        >
+          <div className="flex items-center gap-2.5">
+            {notice.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            )}
+            <span>{notice.message}</span>
+          </div>
+          <button
+            onClick={() => setNotice(null)}
+            className="p-1 rounded-md hover:bg-white/10 text-neutral-400 hover:text-white transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Plans List Table / Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -250,11 +303,16 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
                 <button
+                  disabled={deletingId === plan.id}
                   onClick={() => handleDelete(plan.id)}
-                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors"
+                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-50"
                   title="Delete Plan"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  {deletingId === plan.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
             </div>

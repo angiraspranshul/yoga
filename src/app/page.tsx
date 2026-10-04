@@ -11,6 +11,7 @@ import PlanGrid from '@/components/PlanGrid';
 import FaqSection from '@/components/FaqSection';
 import { getPlans, getSettings } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function HomePage() {

@@ -2,6 +2,7 @@ import React from 'react';
 import { getPlans } from '@/lib/db';
 import PlansManagerClient from './PlansManagerClient';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function AdminPlansPage() {

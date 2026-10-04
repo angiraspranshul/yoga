@@ -3,6 +3,8 @@ import { revalidatePath } from 'next/cache';
 import { getPlans, createPlan } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

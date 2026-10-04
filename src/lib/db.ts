@@ -685,8 +685,8 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function updateSettings(data: Partial<Settings>): Promise<Settings> {
-  // If instagramHandle was provided but not url, automatically sync the url
-  if (data.instagramHandle && !data.instagramUrl) {
+  // If instagramHandle was provided, sync the url
+  if (data.instagramHandle) {
     const cleanHandle = data.instagramHandle.replace('@', '').trim();
     data.instagramUrl = `https://www.instagram.com/${cleanHandle}`;
   }
