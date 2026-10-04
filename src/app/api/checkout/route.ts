@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { createOrder, getSettings, getPlanById } from '@/lib/db';
 import { dispatchOrderNotifications } from '@/lib/notification';
 
@@ -53,6 +54,10 @@ export async function POST(request: Request) {
       instructorEmail: settings.notificationEmail || process.env.INSTRUCTOR_EMAIL || 'dhaarna@yogawithdhaarna.com',
       webhookUrl: settings.webhookUrl || process.env.DISCORD_WEBHOOK_URL,
     });
+
+    revalidatePath('/admin', 'page');
+    revalidatePath('/admin/orders', 'page');
+    revalidatePath('/checkout/success', 'page');
 
     return NextResponse.json({
       success: true,

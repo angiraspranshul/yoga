@@ -3,8 +3,24 @@ import path from 'path';
 import { prisma, isOnlineDbConnected } from './prisma';
 import { Plan, Order, Client, NotificationItem, Settings } from '@/types';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const STORE_FILE = path.join(DATA_DIR, 'store.json');
+const IS_SERVERLESS = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const LOCAL_DATA_DIR = path.join(process.cwd(), 'data');
+const LOCAL_STORE_FILE = path.join(LOCAL_DATA_DIR, 'store.json');
+const STORE_DIR = IS_SERVERLESS ? '/tmp' : LOCAL_DATA_DIR;
+const STORE_FILE = path.join(STORE_DIR, 'store.json');
+
+// Circuit breaker for online DB connection
+let dbCooldownUntil = 0;
+
+function isDbReady(): boolean {
+  return isOnlineDbConnected && Boolean(prisma) && Date.now() > dbCooldownUntil;
+}
+
+function markDbError(e: any) {
+  console.warn('Prisma operation failed, falling back to persistent store:', e?.message || e);
+  // Back off for 30 seconds so we don't block subsequent requests with connection timeouts
+  dbCooldownUntil = Date.now() + 30000;
+}
 
 const INITIAL_PLANS: Plan[] = [
   {
@@ -29,8 +45,8 @@ const INITIAL_PLANS: Plan[] = [
     imageUrl: 'https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     isFeatured: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
   },
   {
     id: 'plan_2',
@@ -54,8 +70,8 @@ const INITIAL_PLANS: Plan[] = [
     imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     isFeatured: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
   },
   {
     id: 'plan_3',
@@ -79,8 +95,8 @@ const INITIAL_PLANS: Plan[] = [
     imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     isFeatured: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
   },
   {
     id: 'plan_4',
@@ -104,8 +120,8 @@ const INITIAL_PLANS: Plan[] = [
     imageUrl: 'https://images.unsplash.com/photo-1599447421416-3414500d18a5?auto=format&fit=crop&w=1200&q=80',
     isActive: true,
     isFeatured: false,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: '2026-10-01T00:00:00.000Z',
+    updatedAt: '2026-10-01T00:00:00.000Z',
   },
 ];
 
@@ -130,10 +146,22 @@ interface LocalStore {
 
 function ensureDataFile(): LocalStore {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(STORE_DIR)) {
+      fs.mkdirSync(STORE_DIR, { recursive: true });
     }
+
     if (!fs.existsSync(STORE_FILE)) {
+      // If store in STORE_DIR doesn't exist, try copying from LOCAL_STORE_FILE seed
+      if (fs.existsSync(LOCAL_STORE_FILE)) {
+        try {
+          const seedContent = fs.readFileSync(LOCAL_STORE_FILE, 'utf-8');
+          fs.writeFileSync(STORE_FILE, seedContent, 'utf-8');
+          return JSON.parse(seedContent);
+        } catch {
+          // Fall through to initial creation
+        }
+      }
+
       const initial: LocalStore = {
         plans: INITIAL_PLANS,
         clients: [
@@ -142,14 +170,14 @@ function ensureDataFile(): LocalStore {
             fullName: 'Ananya Roy',
             email: 'ananya.roy@example.com',
             phone: '+91 98765 43210',
-            createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+            createdAt: '2026-10-02T10:00:00.000Z',
           },
           {
             id: 'client_2',
             fullName: 'Marcus Vance',
             email: 'marcus.v@example.com',
             phone: '+1 415 555 0192',
-            createdAt: new Date(Date.now() - 86400000).toISOString(),
+            createdAt: '2026-10-03T14:30:00.000Z',
           },
         ],
         orders: [
@@ -166,8 +194,8 @@ function ensureDataFile(): LocalStore {
             healthNotes: 'Mild lower back stiffness from sitting 9 hours at work.',
             preferredSlot: 'Morning 7:00 AM IST',
             clientMessage: 'Looking forward to safe alignment and learning the basics!',
-            createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-            updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+            createdAt: '2026-10-02T10:05:00.000Z',
+            updatedAt: '2026-10-02T10:05:00.000Z',
           },
           {
             id: 'ord_2',
@@ -182,18 +210,18 @@ function ensureDataFile(): LocalStore {
             healthNotes: 'Past shoulder impingement, need posture correction.',
             preferredSlot: 'Weekend Mornings',
             clientMessage: 'Need help refining Bhujangasana and spine mobility.',
-            createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
-            updatedAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+            createdAt: '2026-10-03T14:35:00.000Z',
+            updatedAt: '2026-10-03T14:35:00.000Z',
           },
         ],
         notifications: [
           {
             id: 'notif_1',
             title: 'New Booking: 1-on-1 Spine Health',
-            message: 'Marcus Vance purchased 1-on-1 Personal Spine Health Coaching (INR 4,999).',
+            message: 'Marcus Vance enrolled in 1-on-1 Personal Spine Health Coaching (INR 4,999).',
             orderId: 'ord_2',
             isRead: false,
-            createdAt: new Date(Date.now() - 3600000 * 3).toISOString(),
+            createdAt: '2026-10-03T14:35:00.000Z',
           },
           {
             id: 'notif_2',
@@ -201,7 +229,7 @@ function ensureDataFile(): LocalStore {
             message: 'Ananya Roy enrolled in Beginner Foundations & Safe Alignment (INR 2,499).',
             orderId: 'ord_1',
             isRead: true,
-            createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+            createdAt: '2026-10-02T10:05:00.000Z',
           },
         ],
         settings: INITIAL_SETTINGS,
@@ -209,6 +237,7 @@ function ensureDataFile(): LocalStore {
       fs.writeFileSync(STORE_FILE, JSON.stringify(initial, null, 2), 'utf-8');
       return initial;
     }
+
     const data = JSON.parse(fs.readFileSync(STORE_FILE, 'utf-8'));
     return data;
   } catch {
@@ -224,10 +253,18 @@ function ensureDataFile(): LocalStore {
 
 function saveStore(data: LocalStore) {
   try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+    if (!fs.existsSync(STORE_DIR)) {
+      fs.mkdirSync(STORE_DIR, { recursive: true });
     }
     fs.writeFileSync(STORE_FILE, JSON.stringify(data, null, 2), 'utf-8');
+
+    // Also persist locally if running locally
+    if (!IS_SERVERLESS && STORE_FILE !== LOCAL_STORE_FILE) {
+      if (!fs.existsSync(LOCAL_DATA_DIR)) {
+        fs.mkdirSync(LOCAL_DATA_DIR, { recursive: true });
+      }
+      fs.writeFileSync(LOCAL_STORE_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    }
   } catch (err) {
     console.error('Failed to save store:', err);
   }
@@ -265,7 +302,7 @@ function formatOrder(r: any): Order {
 }
 
 export async function getPlans(includeInactive = false): Promise<Plan[]> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const records = await prisma.plan.findMany({
         where: includeInactive ? undefined : { isActive: true },
@@ -273,7 +310,7 @@ export async function getPlans(includeInactive = false): Promise<Plan[]> {
       });
       return records.map(formatPlan);
     } catch (e) {
-      console.warn('Prisma query failed, falling back to store:', e);
+      markDbError(e);
     }
   }
 
@@ -282,14 +319,14 @@ export async function getPlans(includeInactive = false): Promise<Plan[]> {
 }
 
 export async function getPlanBySlug(slug: string): Promise<Plan | null> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const p = await prisma.plan.findUnique({ where: { slug } });
       if (p) {
         return formatPlan(p);
       }
     } catch (e) {
-      console.warn('Prisma query failed, falling back to store:', e);
+      markDbError(e);
     }
   }
 
@@ -298,14 +335,14 @@ export async function getPlanBySlug(slug: string): Promise<Plan | null> {
 }
 
 export async function getPlanById(id: string): Promise<Plan | null> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const p = await prisma.plan.findUnique({ where: { id } });
       if (p) {
         return formatPlan(p);
       }
     } catch (e) {
-      console.warn('Prisma query failed, falling back to store:', e);
+      markDbError(e);
     }
   }
 
@@ -321,7 +358,7 @@ export async function createPlan(data: Omit<Plan, 'id' | 'createdAt' | 'updatedA
     updatedAt: new Date().toISOString(),
   };
 
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const created = await prisma.plan.create({
         data: {
@@ -343,7 +380,7 @@ export async function createPlan(data: Omit<Plan, 'id' | 'createdAt' | 'updatedA
       });
       return formatPlan(created);
     } catch (e) {
-      console.warn('Prisma create failed, falling back to local store:', e);
+      markDbError(e);
     }
   }
 
@@ -354,7 +391,7 @@ export async function createPlan(data: Omit<Plan, 'id' | 'createdAt' | 'updatedA
 }
 
 export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan | null> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const updated = await prisma.plan.update({
         where: { id },
@@ -365,7 +402,7 @@ export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan 
       });
       return formatPlan(updated);
     } catch (e) {
-      console.warn('Prisma update failed, falling back to local store:', e);
+      markDbError(e);
     }
   }
 
@@ -382,12 +419,14 @@ export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan 
 }
 
 export async function deletePlan(id: string): Promise<boolean> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
+      // First delete associated orders to prevent foreign key constraint violations
+      await prisma.order.deleteMany({ where: { planId: id } });
       await prisma.plan.delete({ where: { id } });
       return true;
     } catch (e) {
-      console.warn('Prisma delete failed, falling back to local store:', e);
+      markDbError(e);
     }
   }
 
@@ -451,7 +490,7 @@ export async function createOrder(payload: {
     createdAt: new Date().toISOString(),
   };
 
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       let dbClient = await prisma.client.findFirst({ where: { email: payload.email } });
       if (!dbClient) {
@@ -509,7 +548,7 @@ export async function createOrder(payload: {
         },
       };
     } catch (e) {
-      console.warn('Prisma create order failed, saving locally:', e);
+      markDbError(e);
     }
   }
 
@@ -522,7 +561,7 @@ export async function createOrder(payload: {
 }
 
 export async function getOrders(): Promise<Order[]> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const records = await prisma.order.findMany({
         include: { plan: true, client: true },
@@ -530,7 +569,7 @@ export async function getOrders(): Promise<Order[]> {
       });
       return records.map(formatOrder);
     } catch (e) {
-      console.warn('Prisma getOrders failed, fallback to local store:', e);
+      markDbError(e);
     }
   }
 
@@ -542,8 +581,31 @@ export async function getOrders(): Promise<Order[]> {
   }));
 }
 
+export async function getOrderById(id: string): Promise<Order | null> {
+  if (isDbReady() && prisma) {
+    try {
+      const record = await prisma.order.findUnique({
+        where: { id },
+        include: { plan: true, client: true },
+      });
+      if (record) return formatOrder(record);
+    } catch (e) {
+      markDbError(e);
+    }
+  }
+
+  const store = ensureDataFile();
+  const order = store.orders.find((o) => o.id === id);
+  if (!order) return null;
+  return {
+    ...order,
+    plan: store.plans.find((p) => p.id === order.planId),
+    client: store.clients.find((c) => c.id === order.clientId),
+  };
+}
+
 export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<Order | null> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const updated = await prisma.order.update({
         where: { id: orderId },
@@ -552,7 +614,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
       });
       return formatOrder(updated);
     } catch (e) {
-      console.warn('Prisma update order failed, fallback to local store:', e);
+      markDbError(e);
     }
   }
 
@@ -566,7 +628,7 @@ export async function updateOrderStatus(orderId: string, status: Order['status']
 }
 
 export async function getNotifications(): Promise<NotificationItem[]> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const records = await prisma.notification.findMany({
         orderBy: { createdAt: 'desc' },
@@ -577,7 +639,7 @@ export async function getNotifications(): Promise<NotificationItem[]> {
         createdAt: n.createdAt.toISOString(),
       }));
     } catch (e) {
-      console.warn('Prisma getNotifications failed, fallback to store:', e);
+      markDbError(e);
     }
   }
 
@@ -586,7 +648,7 @@ export async function getNotifications(): Promise<NotificationItem[]> {
 }
 
 export async function markNotificationRead(id: string): Promise<boolean> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       await prisma.notification.update({
         where: { id },
@@ -594,7 +656,7 @@ export async function markNotificationRead(id: string): Promise<boolean> {
       });
       return true;
     } catch (e) {
-      console.warn('Prisma markNotificationRead failed, fallback to store:', e);
+      markDbError(e);
     }
   }
 
@@ -609,12 +671,12 @@ export async function markNotificationRead(id: string): Promise<boolean> {
 }
 
 export async function getSettings(): Promise<Settings> {
-  if (isOnlineDbConnected && prisma) {
+  if (isDbReady() && prisma) {
     try {
       const s = await prisma.settings.findFirst();
       if (s) return s;
     } catch (e) {
-      console.warn('Prisma getSettings failed, fallback to store:', e);
+      markDbError(e);
     }
   }
 
@@ -623,7 +685,13 @@ export async function getSettings(): Promise<Settings> {
 }
 
 export async function updateSettings(data: Partial<Settings>): Promise<Settings> {
-  if (isOnlineDbConnected && prisma) {
+  // If instagramHandle was provided but not url, automatically sync the url
+  if (data.instagramHandle && !data.instagramUrl) {
+    const cleanHandle = data.instagramHandle.replace('@', '').trim();
+    data.instagramUrl = `https://www.instagram.com/${cleanHandle}`;
+  }
+
+  if (isDbReady() && prisma) {
     try {
       const updated = await prisma.settings.upsert({
         where: { id: 'default' },
@@ -632,7 +700,7 @@ export async function updateSettings(data: Partial<Settings>): Promise<Settings>
       });
       return updated;
     } catch (e) {
-      console.warn('Prisma updateSettings failed, fallback to store:', e);
+      markDbError(e);
     }
   }
 

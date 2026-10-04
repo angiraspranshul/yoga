@@ -1,0 +1,182 @@
+{
+  "plans": [
+    {
+      "id": "plan_1",
+      "title": "Beginner Foundations & Safe Alignment",
+      "slug": "beginner-foundations-safe-alignment",
+      "description": "Designed specifically for beginners or those returning to yoga after injury. Build functional strength, learn proper joint alignment, and cultivate breath awareness without fear of straining your lower back.",
+      "price": 2499,
+      "priceUsd": 32,
+      "currency": "INR",
+      "duration": "4 Weeks (12 Live Sessions)",
+      "type": "BATCH",
+      "level": "BEGINNER",
+      "badge": "MOST POPULAR",
+      "features": [
+        "Master foundational postures (Tadasana, Bhujangasana, Virabhadrasana)",
+        "Gentle spine decompression & wrist/knee injury prevention",
+        "Live posture correction & personal Q&A every session",
+        "HD recordings + guided practice homework included",
+        "No prior flexibility or yoga experience required"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80",
+      "isActive": true,
+      "isFeatured": true,
+      "createdAt": "2026-10-01T00:00:00.000Z",
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "plan_2",
+      "title": "1-on-1 Personal Spine Health & Mobility Coaching",
+      "slug": "1-on-1-spine-health-mobility",
+      "description": "Private dedicated coaching tailored to your body's unique anatomy and lifestyle. Ideal for desk workers, individuals managing neck/back stiffness, or those seeking dedicated 1-on-1 attention.",
+      "price": 4999,
+      "priceUsd": 65,
+      "currency": "INR",
+      "duration": "4 Private Sessions (60 Min each)",
+      "type": "PRIVATE",
+      "level": "ALL_LEVELS",
+      "badge": "LIMITED (4 SPOTS/WEEK)",
+      "features": [
+        "Comprehensive posture & spinal mobility assessment",
+        "Customized sequence for desk slouch, back pain, or stiffness",
+        "Direct WhatsApp guidance & daily posture habit tracker",
+        "Flexible scheduling according to your timezone",
+        "Personalized Pranayama (breathwork) sequence for stress"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
+      "isActive": true,
+      "isFeatured": true,
+      "createdAt": "2026-10-01T00:00:00.000Z",
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "plan_3",
+      "title": "Monthly Morning Flow & Pranayama Pass",
+      "slug": "monthly-morning-flow-pranayama",
+      "description": "Start each morning grounded, energized, and centered. A balanced rhythm of energizing movement, nervous system regulation, and mindful stillness before your workday begins.",
+      "price": 3499,
+      "priceUsd": 45,
+      "currency": "INR",
+      "duration": "Monthly Pass (Mon-Fri 7:00 AM IST)",
+      "type": "MEMBERSHIP",
+      "level": "ALL_LEVELS",
+      "badge": "DAILY RITUAL",
+      "features": [
+        "20 Live interactive morning classes per month",
+        "Dynamic Vinyasa flow + soothing restorative cool-down",
+        "15 minutes dedicated conscious breathwork & meditation",
+        "Community WhatsApp circle with weekly wellness prompts",
+        "Full access to on-demand catch-up recordings"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=80",
+      "isActive": true,
+      "isFeatured": true,
+      "createdAt": "2026-10-01T00:00:00.000Z",
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    },
+    {
+      "id": "plan_4",
+      "title": "Corporate & Workplace Ergonomics Masterclass",
+      "slug": "corporate-workplace-ergonomics",
+      "description": "Live virtual interactive wellness session for tech teams, remote founders, and design studios. Practical desk yoga, optical rest, and chair alignment techniques.",
+      "price": 9999,
+      "priceUsd": 130,
+      "currency": "INR",
+      "duration": "Single 90-Minute Interactive Workshop",
+      "type": "WORKSHOP",
+      "level": "ALL_LEVELS",
+      "badge": "TEAMS & WORKPLACES",
+      "features": [
+        "Interactive ergonomics audit for desk workers",
+        "Instant neck & upper thoracic release sequences",
+        "Breathing techniques to reduce cortisol & midday fatigue",
+        "PDF Workplace Ergonomics Pocket Guide for all attendees",
+        "Recording license for internal team LMS / onboarding"
+      ],
+      "imageUrl": "https://images.unsplash.com/photo-1575052814086-f385e2e2ad1b?auto=format&fit=crop&w=1200&q=80",
+      "isActive": true,
+      "isFeatured": false,
+      "createdAt": "2026-10-01T00:00:00.000Z",
+      "updatedAt": "2026-10-01T00:00:00.000Z"
+    }
+  ],
+  "clients": [
+    {
+      "id": "client_1",
+      "fullName": "Ananya Roy",
+      "email": "ananya.roy@gmail.com",
+      "phone": "+91 98765 43210",
+      "createdAt": "2026-10-02T10:00:00.000Z"
+    },
+    {
+      "id": "client_2",
+      "fullName": "Marcus Vance",
+      "email": "marcus.v@outlook.com",
+      "phone": "+1 415 555 2671",
+      "createdAt": "2026-10-03T14:30:00.000Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "ord_1",
+      "planId": "plan_1",
+      "clientId": "client_1",
+      "amount": 2499,
+      "currency": "INR",
+      "status": "CONFIRMED",
+      "paymentMethod": "UPI",
+      "paymentStatus": "PAID",
+      "experienceLevel": "Beginner (New to Yoga)",
+      "healthNotes": "Mild lower back stiffness from sitting 9 hours at work.",
+      "preferredSlot": "Morning 7:00 AM IST",
+      "clientMessage": "Looking forward to safe alignment and learning the basics!",
+      "createdAt": "2026-10-02T10:05:00.000Z",
+      "updatedAt": "2026-10-02T10:05:00.000Z"
+    },
+    {
+      "id": "ord_2",
+      "planId": "plan_2",
+      "clientId": "client_2",
+      "amount": 4999,
+      "currency": "INR",
+      "status": "NEW",
+      "paymentMethod": "CARD",
+      "paymentStatus": "PAID",
+      "experienceLevel": "Regular Practitioner",
+      "healthNotes": "Past shoulder impingement, need posture correction.",
+      "preferredSlot": "Weekend Mornings",
+      "clientMessage": "Need help refining Bhujangasana and spine mobility.",
+      "createdAt": "2026-10-03T14:35:00.000Z",
+      "updatedAt": "2026-10-03T14:35:00.000Z"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif_1",
+      "title": "New Booking: 1-on-1 Spine Health",
+      "message": "Marcus Vance enrolled in 1-on-1 Personal Spine Health Coaching (INR 4,999).",
+      "orderId": "ord_2",
+      "isRead": false,
+      "createdAt": "2026-10-03T14:35:00.000Z"
+    },
+    {
+      "id": "notif_2",
+      "title": "New Booking: Beginner Foundations",
+      "message": "Ananya Roy enrolled in Beginner Foundations & Safe Alignment (INR 2,499).",
+      "orderId": "ord_1",
+      "isRead": true,
+      "createdAt": "2026-10-02T10:05:00.000Z"
+    }
+  ],
+  "settings": {
+    "id": "default",
+    "instructorName": "Dhaarna Sharma",
+    "instagramHandle": "@yogawithdhaarna",
+    "instagramUrl": "https://www.instagram.com/yogawithdhaarna",
+    "notificationEmail": "dhaarna@yogawithdhaarna.com",
+    "webhookUrl": "",
+    "emailNotifications": true,
+    "soundAlerts": true
+  }
+}

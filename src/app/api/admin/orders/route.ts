@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getOrders, updateOrderStatus } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
@@ -35,6 +36,10 @@ export async function PATCH(request: Request) {
     if (!updated) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
+
+    revalidatePath('/checkout/success', 'page');
+    revalidatePath('/admin/orders', 'page');
+    revalidatePath('/admin', 'page');
 
     return NextResponse.json(updated);
   } catch (error) {

@@ -2,8 +2,16 @@
 
 import React from 'react';
 import { ArrowRight, Instagram } from 'lucide-react';
+import { Settings } from '@/types';
 
-export default function ReadyToBeginBanner() {
+interface ReadyToBeginBannerProps {
+  settings?: Settings | null;
+}
+
+export default function ReadyToBeginBanner({ settings }: ReadyToBeginBannerProps) {
+  const instagramUrl = settings?.instagramUrl || 'https://www.instagram.com/yogawithdhaarna';
+  const instagramHandle = settings?.instagramHandle || '@yogawithdhaarna';
+
   return (
     <section className="bg-sage py-20 sm:py-28 px-6 text-cream">
       <div className="mx-auto max-w-3xl text-center space-y-6">
@@ -25,13 +33,13 @@ export default function ReadyToBeginBanner() {
           </a>
 
           <a
-            href="https://www.instagram.com/yogawithdhaarna"
+            href={instagramUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-cream/15 hover:bg-cream/25 text-cream border border-cream/20 backdrop-blur-md px-7 py-4 text-sm font-medium transition-all"
           >
             <Instagram className="w-4 h-4 text-gold" />
-            <span>Connect on Instagram</span>
+            <span>Connect on Instagram ({instagramHandle})</span>
           </a>
         </div>
       </div>

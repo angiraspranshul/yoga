@@ -2,14 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Shield } from 'lucide-react';
+import { Settings } from '@/types';
 
-export default function Navbar() {
+interface NavbarProps {
+  settings?: Settings | null;
+}
+
+export default function Navbar({ settings }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
+  const instructorName = settings?.instructorName || 'Dhaarna Sharma';
+  const firstName = instructorName.split(' ')[0] || 'Dhaarna';
+
   useEffect(() => {
     const handleScroll = () => {
-      // Show floating navbar once user scrolls past roughly 40% of the viewport (sliding past the hero)
+      // Show floating navbar once user scrolls past roughly 45% of the viewport (sliding past the hero)
       const threshold = window.innerHeight * 0.45;
       const scrolledPast = window.scrollY > threshold;
       setIsVisible(scrolledPast);
@@ -35,7 +43,7 @@ export default function Navbar() {
         {/* Brand Logo */}
         <a href="/" className="flex items-center gap-2 group">
           <span className="font-serif italic font-normal text-lg sm:text-xl text-olive tracking-tight group-hover:text-sage-dark transition-colors">
-            Yoga with Dhaarna
+            Yoga with {firstName}
           </span>
         </a>
 
@@ -61,20 +69,20 @@ export default function Navbar() {
           </a>
         </nav>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2.5">
+        {/* Right Action Button & Mobile Toggle */}
+        <div className="flex items-center gap-3">
           <a
             href="/admin"
-            className="hidden lg:flex items-center gap-1 text-xs font-medium text-olive/60 hover:text-olive transition-colors px-2.5 py-1 rounded-full hover:bg-olive/5"
-            title="Instructor Admin Portal"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-sans font-medium text-olive/70 hover:text-olive bg-cream/80 hover:bg-cream border border-cream-dark transition-all"
+            title="Instructor Admin Dashboard"
           >
-            <Shield className="w-3.5 h-3.5" />
+            <Shield className="w-3.5 h-3.5 text-gold" />
             <span>Admin</span>
           </a>
 
           <a
             href="#classes"
-            className="px-5 py-2 rounded-full text-xs sm:text-sm font-medium bg-olive hover:bg-olive-light text-cream transition-all shadow-sm active:scale-95"
+            className="hidden sm:inline-flex items-center justify-center rounded-full bg-olive hover:bg-olive-light text-cream font-medium px-5 py-2 text-xs sm:text-sm transition-all duration-300 shadow-sm"
           >
             Book Session
           </a>
@@ -106,7 +114,7 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
               className="py-2 border-b border-cream-dark/50"
             >
-              Watch Dhaarna&apos;s Story
+              Watch {firstName}&apos;s Story
             </a>
             <a
               href="#journey"
@@ -141,7 +149,7 @@ export default function Navbar() {
               onClick={() => setIsOpen(false)}
               className="py-2 border-b border-cream-dark/50 flex items-center gap-2 text-xs text-olive/60"
             >
-              <Shield className="w-3.5 h-3.5" />
+              <Shield className="w-3.5 h-3.5 text-gold" />
               <span>Instructor Admin Portal</span>
             </a>
             <a

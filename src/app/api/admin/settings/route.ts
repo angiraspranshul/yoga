@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getSettings, updateSettings } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
@@ -23,6 +24,11 @@ export async function PUT(request: Request) {
 
     const body = await request.json();
     const updated = await updateSettings(body);
+
+    revalidatePath('/', 'layout');
+    revalidatePath('/checkout/[planId]', 'page');
+    revalidatePath('/checkout/success', 'page');
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Failed to update settings:', error);

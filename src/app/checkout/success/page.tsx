@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getOrders } from '@/lib/db';
+import { getOrders, getOrderById, getSettings } from '@/lib/db';
 import { CheckCircle2, Instagram, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 
 export const revalidate = 0;
@@ -14,12 +14,24 @@ interface SuccessPageProps {
 
 export default async function BookingSuccessPage({ searchParams }: SuccessPageProps) {
   const bookingId = searchParams.bookingId;
-  const orders = await getOrders();
-  const order = orders.find((o) => o.id === bookingId) || orders[0];
+  const [order, settings] = await Promise.all([
+    bookingId ? getOrderById(bookingId) : (await getOrders())[0],
+    getSettings(),
+  ]);
+
+  const orderStatus = order?.status || 'NEW';
+  const statusBadgeClass =
+    orderStatus === 'CONFIRMED'
+      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+      : orderStatus === 'COMPLETED'
+      ? 'bg-olive text-cream border-olive'
+      : orderStatus === 'CANCELLED'
+      ? 'bg-red-50 text-red-700 border-red-200'
+      : 'bg-amber-50 text-amber-800 border-amber-200';
 
   return (
     <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
-      <Navbar />
+      <Navbar settings={settings} />
 
       <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto space-y-8">
         <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-olive/10 text-center relative overflow-hidden shadow-sm">
@@ -34,10 +46,10 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                 Enrollment Confirmed
               </span>
               <h1 className="text-3xl sm:text-4xl font-serif italic text-olive tracking-tight mt-1">
-                Welcome to Yoga with Dhaarna!
+                Welcome to Yoga with {settings.instructorName.split(' ')[0]}!
               </h1>
               <p className="text-sm text-olive/70 mt-2 max-w-md mx-auto font-light leading-relaxed">
-                Your spot has been reserved. Dhaarna Sharma has received your registration and health intake.
+                Your spot has been reserved. {settings.instructorName} has received your registration and health intake.
               </p>
             </div>
 
@@ -45,7 +57,12 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
             <div className="bg-cream/50 rounded-2xl p-6 border border-olive/10 text-left space-y-4 max-w-lg mx-auto">
               <div className="flex items-center justify-between border-b border-olive/10 pb-3">
                 <span className="text-xs font-sans text-olive/60">Booking Reference</span>
-                <span className="text-xs font-mono font-bold text-olive">{order?.id || 'YOGA-REC-892'}</span>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded-full border font-medium ${statusBadgeClass}`}>
+                    Status: {orderStatus}
+                  </span>
+                  <span className="text-xs font-mono font-bold text-olive">{order?.id || 'YOGA-REC-892'}</span>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-xs">
@@ -62,9 +79,9 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                   <span className="font-semibold text-olive">{order?.preferredSlot || 'Morning 7:00 AM IST'}</span>
                 </div>
                 <div>
-                  <span className="text-olive/60 block">Payment Status</span>
+                  <span className="text-olive/60 block">Payment Method</span>
                   <span className="font-semibold text-olive font-mono">
-                    Paid • ₹{order?.amount?.toLocaleString('en-IN') || '2,499'}
+                    {order?.paymentMethod || 'CARD'} • ₹{order?.amount?.toLocaleString('en-IN') || '2,499'}
                   </span>
                 </div>
               </div>
@@ -89,7 +106,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="font-mono text-gold font-bold">2.</span>
-                  <span>Dhaarna will review your alignment/injury notes to prepare custom cues for your practice.</span>
+                  <span>{settings.instructorName.split(' ')[0]} will review your alignment/injury notes to prepare custom cues for your practice.</span>
                 </div>
                 <div className="flex items-start gap-2.5">
                   <span className="font-mono text-gold font-bold">3.</span>
@@ -107,20 +124,20 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                 Return to Home
               </a>
               <a
-                href="https://www.instagram.com/yogawithdhaarna"
+                href={settings.instagramUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full sm:w-auto px-6 py-3 rounded-full text-xs font-medium tracking-wide text-olive hover:text-olive bg-cream/70 hover:bg-cream border border-olive/15 transition-colors flex items-center justify-center gap-1.5"
               >
                 <Instagram className="w-3.5 h-3.5 text-gold" />
-                <span>DM @yogawithdhaarna</span>
+                <span>DM {settings.instagramHandle}</span>
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      <Footer />
+      <Footer settings={settings} />
     </main>
   );
 }

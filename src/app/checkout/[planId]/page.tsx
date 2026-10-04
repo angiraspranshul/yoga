@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CheckoutClient from './CheckoutClient';
-import { getPlanById } from '@/lib/db';
+import { getPlanById, getSettings } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ShieldCheck, Check, Clock } from 'lucide-react';
 
@@ -15,7 +15,10 @@ interface CheckoutPageProps {
 }
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
-  const plan = await getPlanById(params.planId);
+  const [plan, settings] = await Promise.all([
+    getPlanById(params.planId),
+    getSettings(),
+  ]);
 
   if (!plan) {
     notFound();
@@ -23,7 +26,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
 
   return (
     <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
-      <Navbar />
+      <Navbar settings={settings} />
 
       <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-5xl mx-auto space-y-8">
         {/* Breadcrumb */}
@@ -106,19 +109,19 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
             <div className="p-3.5 rounded-2xl bg-cream/60 border border-olive/10 flex items-center gap-3 text-xs text-olive/80">
               <ShieldCheck className="w-5 h-5 text-gold shrink-0" />
               <span className="font-light leading-snug">
-                Dhaarna personally reviews every intake note before class begins.
+                {settings.instructorName} personally reviews every intake note before class begins.
               </span>
             </div>
           </div>
 
           {/* RIGHT COLUMN: INTAKE & CHECKOUT FORM */}
           <div className="lg:col-span-7">
-            <CheckoutClient plan={plan} />
+            <CheckoutClient plan={plan} settings={settings} />
           </div>
         </div>
       </div>
 
-      <Footer />
+      <Footer settings={settings} />
     </main>
   );
 }

@@ -64,3 +64,6 @@ export interface Settings {
   emailNotifications: boolean;
   soundAlerts: boolean;
 }
+
+export type WebsiteSettings = Settings;
+

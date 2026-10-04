@@ -9,17 +9,20 @@ import MomentsGallery from '@/components/midground/MomentsGallery';
 import ReadyToBeginBanner from '@/components/midground/ReadyToBeginBanner';
 import PlanGrid from '@/components/PlanGrid';
 import FaqSection from '@/components/FaqSection';
-import { getPlans } from '@/lib/db';
+import { getPlans, getSettings } from '@/lib/db';
 
 export const revalidate = 0;
 
 export default async function HomePage() {
-  const plans = await getPlans(false);
+  const [plans, settings] = await Promise.all([
+    getPlans(false),
+    getSettings(),
+  ]);
 
   return (
     <main className="min-h-screen bg-cream text-olive selection:bg-sage selection:text-cream">
       {/* 1. ELEGANT SERIF & GLASS NAVBAR */}
-      <Navbar />
+      <Navbar settings={settings} />
 
       {/* 2. SERENE MOUNTAIN HERO: "Find stillness. Move with breath." */}
       <HeroSection />
@@ -33,7 +36,7 @@ export default async function HomePage() {
       {/* 5. A SESSION WITH DHAARNA: "The journey of one hour" (4-STEP STEPPER) */}
       <SessionJourneySection />
 
-      {/* 6. CLASSES & OFFERINGS (CONNECTED TO SUPABASE DATABASE) */}
+      {/* 6. CLASSES & OFFERINGS (CONNECTED TO DATABASE) */}
       <section id="classes" className="py-20 sm:py-28 px-4 sm:px-6 md:px-8 border-t border-cream-dark/60 bg-cream">
         <div className="max-w-6xl mx-auto space-y-12">
           <div className="text-center space-y-3 max-w-xl mx-auto">
@@ -50,7 +53,7 @@ export default async function HomePage() {
       </section>
 
       {/* 7. MOMENTS FROM THE MAT (PHOTO CAROUSEL) */}
-      <MomentsGallery />
+      <MomentsGallery settings={settings} />
 
       {/* 8. FREQUENTLY ASKED QUESTIONS */}
       <section id="faq" className="py-20 sm:py-28 px-4 sm:px-6 md:px-8 border-t border-cream-dark/60 bg-cream">
@@ -63,19 +66,19 @@ export default async function HomePage() {
               Frequently Asked Questions
             </h2>
             <p className="text-sm text-olive/60 font-light font-sans">
-              Everything you need to know about practicing with Dhaarna Sharma.
+              Everything you need to know about practicing with {settings?.instructorName || 'Dhaarna Sharma'}.
             </p>
           </div>
 
-          <FaqSection />
+          <FaqSection settings={settings} />
         </div>
       </section>
 
       {/* 9. READY TO BEGIN? SAGE GREEN CALLOUT BANNER */}
-      <ReadyToBeginBanner />
+      <ReadyToBeginBanner settings={settings} />
 
       {/* 10. DEEP OLIVE ORGANIC FOOTER */}
-      <Footer />
+      <Footer settings={settings} />
     </main>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plan } from '@/types';
+import { Plan, WebsiteSettings } from '@/types';
 import {
   User,
   Mail,
@@ -20,9 +20,10 @@ import {
 
 interface CheckoutClientProps {
   plan: Plan;
+  settings?: WebsiteSettings;
 }
 
-export default function CheckoutClient({ plan }: CheckoutClientProps) {
+export default function CheckoutClient({ plan, settings }: CheckoutClientProps) {
   const router = useRouter();
 
   // Form State
@@ -92,7 +93,7 @@ export default function CheckoutClient({ plan }: CheckoutClientProps) {
           Complete Your Registration
         </h2>
         <p className="text-xs text-olive/70 mt-1 font-light">
-          All health and alignment details are kept strictly confidential between you and Dhaarna Sharma.
+          All health and alignment details are kept strictly confidential between you and {settings?.instructorName || 'Dhaarna Sharma'}.
         </p>
       </div>
 
@@ -216,7 +217,7 @@ export default function CheckoutClient({ plan }: CheckoutClientProps) {
 
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-olive/80">
-              Personal Goals or Note for Dhaarna <span className="text-olive/50 font-normal">(Optional)</span>
+              Personal Goals or Note for {settings?.instructorName?.split(' ')[0] || 'Dhaarna'} <span className="text-olive/50 font-normal">(Optional)</span>
             </label>
             <input
               type="text"

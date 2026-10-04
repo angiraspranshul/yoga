@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getPlans, createPlan } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
 
@@ -55,6 +56,9 @@ export async function POST(request: Request) {
       isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
       isFeatured: body.isFeatured !== undefined ? Boolean(body.isFeatured) : false,
     });
+
+    revalidatePath('/', 'layout');
+    revalidatePath('/checkout/[planId]', 'page');
 
     return NextResponse.json(newPlan, { status: 201 });
   } catch (error) {
