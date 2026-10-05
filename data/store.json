@@ -101,74 +101,9 @@
       "updatedAt": "2026-10-01T00:00:00.000Z"
     }
   ],
-  "clients": [
-    {
-      "id": "client_1",
-      "fullName": "Ananya Roy",
-      "email": "ananya.roy@gmail.com",
-      "phone": "+91 98765 43210",
-      "createdAt": "2026-10-02T10:00:00.000Z"
-    },
-    {
-      "id": "client_2",
-      "fullName": "Marcus Vance",
-      "email": "marcus.v@outlook.com",
-      "phone": "+1 415 555 2671",
-      "createdAt": "2026-10-03T14:30:00.000Z"
-    }
-  ],
-  "orders": [
-    {
-      "id": "ord_1",
-      "planId": "plan_1",
-      "clientId": "client_1",
-      "amount": 2499,
-      "currency": "INR",
-      "status": "CONFIRMED",
-      "paymentMethod": "UPI",
-      "paymentStatus": "PAID",
-      "experienceLevel": "Beginner (New to Yoga)",
-      "healthNotes": "Mild lower back stiffness from sitting 9 hours at work.",
-      "preferredSlot": "Morning 7:00 AM IST",
-      "clientMessage": "Looking forward to safe alignment and learning the basics!",
-      "createdAt": "2026-10-02T10:05:00.000Z",
-      "updatedAt": "2026-10-02T10:05:00.000Z"
-    },
-    {
-      "id": "ord_2",
-      "planId": "plan_2",
-      "clientId": "client_2",
-      "amount": 4999,
-      "currency": "INR",
-      "status": "NEW",
-      "paymentMethod": "CARD",
-      "paymentStatus": "PAID",
-      "experienceLevel": "Regular Practitioner",
-      "healthNotes": "Past shoulder impingement, need posture correction.",
-      "preferredSlot": "Weekend Mornings",
-      "clientMessage": "Need help refining Bhujangasana and spine mobility.",
-      "createdAt": "2026-10-03T14:35:00.000Z",
-      "updatedAt": "2026-10-03T14:35:00.000Z"
-    }
-  ],
-  "notifications": [
-    {
-      "id": "notif_1",
-      "title": "New Booking: 1-on-1 Spine Health",
-      "message": "Marcus Vance enrolled in 1-on-1 Personal Spine Health Coaching (INR 4,999).",
-      "orderId": "ord_2",
-      "isRead": false,
-      "createdAt": "2026-10-03T14:35:00.000Z"
-    },
-    {
-      "id": "notif_2",
-      "title": "New Booking: Beginner Foundations",
-      "message": "Ananya Roy enrolled in Beginner Foundations & Safe Alignment (INR 2,499).",
-      "orderId": "ord_1",
-      "isRead": true,
-      "createdAt": "2026-10-02T10:05:00.000Z"
-    }
-  ],
+  "clients": [],
+  "orders": [],
+  "notifications": [],
   "settings": {
     "id": "default",
     "instructorName": "Dhaarna Sharma",
