@@ -20,9 +20,9 @@ export async function GET(request: Request) {
 
     const plans = await getPlans(includeInactive);
     return NextResponse.json(plans);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to get plans:', error);
-    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch plans', detail: error?.message || String(error) }, { status: 500 });
   }
 }
 
@@ -63,8 +63,8 @@ export async function POST(request: Request) {
     revalidatePath('/checkout/[planId]', 'page');
 
     return NextResponse.json(newPlan, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to create plan:', error);
-    return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create plan', detail: error?.message || String(error) }, { status: 500 });
   }
 }
