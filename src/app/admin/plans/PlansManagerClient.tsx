@@ -31,6 +31,7 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -183,9 +184,9 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to permanently delete this yoga plan offering?')) return;
+  const executeDelete = async (id: string) => {
     setDeletingId(id);
+    setDeleteConfirmId(null); // Close the dropdown menu
     try {
       const res = await fetch(`/api/plans/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
@@ -302,18 +303,40 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
                 >
                   <Edit2 className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  disabled={deletingId === plan.id}
-                  onClick={() => handleDelete(plan.id)}
-                  className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-50"
-                  title="Delete Plan"
-                >
-                  {deletingId === plan.id ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="w-3.5 h-3.5" />
+                <div className="relative">
+                  <button
+                    disabled={deletingId === plan.id}
+                    onClick={() => setDeleteConfirmId(deleteConfirmId === plan.id ? null : plan.id)}
+                    className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 transition-colors disabled:opacity-50"
+                    title="Delete Plan"
+                  >
+                    {deletingId === plan.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+
+                  {deleteConfirmId === plan.id && (
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-[#1A1A1A] border border-red-500/30 rounded-xl shadow-2xl z-50 p-3 overflow-hidden">
+                      <p className="text-xs text-red-400 mb-3 font-medium text-center">Permanently delete plan?</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setDeleteConfirmId(null)}
+                          className="flex-1 py-1.5 px-2 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 text-neutral-300 text-xs transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => executeDelete(plan.id)}
+                          className="flex-1 py-1.5 px-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg border border-red-500/30 text-red-400 text-xs font-semibold transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
                   )}
-                </button>
+                </div>
               </div>
             </div>
 
