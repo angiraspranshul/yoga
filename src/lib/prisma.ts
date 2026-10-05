@@ -5,16 +5,9 @@ declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
-const isKnownDeadUrl = (url?: string) => {
-  if (!url) return true;
-  if (url.includes('[YOUR-') || url.includes('[YOUR_') || url.includes('vytvxjzgrbhokmwtovwl')) return true;
-  return false;
-};
-
 const rawDbUrl = process.env.DATABASE_URL;
 const hasValidDbUrl = Boolean(
   rawDbUrl &&
-  !isKnownDeadUrl(rawDbUrl) &&
   (rawDbUrl.startsWith('postgresql://') || rawDbUrl.startsWith('postgres://'))
 );
 
