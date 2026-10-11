@@ -23,6 +23,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   recommendedPlan?: Plan | null;
+  options?: string[];
   timestamp: string;
 }
 
@@ -106,6 +107,7 @@ export default function YogaChatbot() {
         role: 'assistant',
         content: data.reply || 'Thank you for your inquiry. Please reach out to Dhaarna directly if you need personalized assistance.',
         recommendedPlan: data.recommendedPlan || null,
+        options: data.options || [],
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
@@ -329,6 +331,22 @@ export default function YogaChatbot() {
                   }`}
                 >
                   {renderFormattedText(msg.content)}
+
+                  {/* MCQ OPTIONS */}
+                  {msg.options && msg.options.length > 0 && (
+                    <div className="mt-3 flex flex-col gap-2">
+                      {msg.options.map((opt, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSend(opt)}
+                          disabled={isLoading}
+                          className="text-left text-xs bg-sage/10 hover:bg-sage/20 border border-sage/30 text-olive px-3 py-2 rounded-xl transition-all duration-200 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {/* INTERACTIVE RECOMMENDATION CARD */}
                   {msg.recommendedPlan && (

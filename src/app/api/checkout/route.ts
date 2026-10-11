@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       plan,
       instructorEmail: settings.notificationEmail || process.env.INSTRUCTOR_EMAIL || 'dhaarna@yogawithdhaarna.com',
       webhookUrl: settings.webhookUrl || process.env.DISCORD_WEBHOOK_URL,
+      settings,
     });
 
     revalidatePath('/admin', 'page');

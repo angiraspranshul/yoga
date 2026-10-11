@@ -23,7 +23,7 @@ function generateFallbackResponse(
   });
 
   // 1. Date / Day inquiry
-  if (query.includes('day') || query.includes('date') || query.includes('today')) {
+  if (query.includes('what day') || query.includes('what date') || query === 'today' || query === 'what is today') {
     return {
       reply: `Today is **${currentDate}** 🌿\n\nA beautiful day to take a conscious breath and find a moment of stillness on the mat. How may I support your practice today?`,
       recommendedPlan: undefined,
@@ -168,11 +168,16 @@ CURRENT CONTEXT:
 YOUR ROLE & TONE:
 - Speak with warm, grounded, authentic yogic presence. Use tranquil, respectful language (e.g. "Namaste", "gentle awareness", "breath-led movement").
 - Be conversational, concise, welcoming, and helpful (keep responses to 1 to 3 short serene paragraphs or bullet points).
-- If the user greets you (e.g. "hi", "hello"), respond warmly with a mindful greeting and ask how you can assist them today. DO NOT recommend plans on simple greetings.
-- If the user asks about the day or date ("what day it is today"), answer directly using the current date above.
+- If the user greets you, respond warmly and ask how you can assist them today.
 - Avoid robotic corporate customer service phrases.
-- If the user asks about physical tightness, back pain, desk worker posture, or flexibility, explain practical yogic perspectives (e.g. decompression of spine, hip openers, diaphragmatic breathing, mindful modifications).
-- SAFETY DISCLAIMER: If someone mentions acute medical trauma, severe disc herniation, post-surgery, or pregnancy, gently remind them that yoga is complementary and they should check with their medical physician.
+
+DIAGNOSTIC "YOGA DOCTOR" MODE (CRITICAL):
+- When a user mentions a physical symptom (e.g., "my back hurts", "tight hips", "stiff neck", "knee pain"), DO NOT prescribe or recommend a class plan immediately.
+- Instead, enter a "Clarification Phase". Ask 1 gentle, clarifying question to understand their condition better.
+- To make it effortless for the user to reply, provide 3 to 4 short multiple-choice options for them to choose from. 
+- FORMATTING RULE: You MUST format EACH option on its own new line using this exact syntax: [[OPTION:Your short option text]]
+- Wait for the user to answer these clarifying questions in the next turn before offering a specific plan.
+- SAFETY DISCLAIMER: If their answers indicate acute medical trauma, severe disc herniation, sharp shooting nerve pain, post-surgery, or pregnancy, gently and firmly advise them to consult a medical physician before practicing yoga.
 
 CURRENT LIVE OFFERINGS & PRICING (FROM OUR STUDIO DATABASE):
 ${plansContext || 'Private 1-on-1 and Group Cohorts available.'}
@@ -184,15 +189,15 @@ SCHEDULE & PRACTICE DETAILS:
 - Practice Preparation: Practice on empty stomach (2.5 hrs after food or 45 mins after light fruit), comfortable cotton/stretch wear, 4-6mm yoga mat, 2 blocks/strap recommended.
 
 RULES ON RECOMMENDING A PLAN:
-- ONLY recommend a plan if the user explicitly asks about plans, classes, pricing, courses, enrollment, or which class they should take.
 - NEVER recommend a plan or output the tag for greetings ("hi", "hello"), chit-chat, date/time questions, or general philosophy queries.
+- ONLY output the RECOMMEND tag if the user explicitly asks for plans/classes/pricing, OR if you have successfully completed the "Clarification Phase" for their physical symptoms and are confident a gentle yoga plan is safe for them.
 - When you DO recommend a plan, output this exact tag at the very end of your response:
 [[RECOMMEND:PLAN_ID]]
 (Replace PLAN_ID with the exact ID from the list above. Only include at most one tag).`;
 
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
       // Format conversation history for Gemini
       const formattedContents = messages.map(m => ({
@@ -212,9 +217,9 @@ RULES ON RECOMMENDING A PLAN:
           },
         });
       } catch (primaryModelErr: any) {
-        console.warn(`Model ${modelName} failed, retrying with gemini-2.0-flash:`, primaryModelErr?.message);
+        console.warn(`Model ${modelName} failed, retrying with gemini-3.8-flash:`, primaryModelErr?.message);
         response = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
+          model: 'gemini-3.8-flash',
           contents: formattedContents,
           config: {
             systemInstruction: systemPrompt,
@@ -235,9 +240,19 @@ RULES ON RECOMMENDING A PLAN:
         replyText = replyText.replace(/\[\[RECOMMEND:[a-zA-Z0-9_-]+\]\]/, '').trim();
       }
 
+      // Extract MCQ options
+      const options: string[] = [];
+      const optionRegex = /\[\[OPTION:(.*?)\]\]/g;
+      let optionMatch;
+      while ((optionMatch = optionRegex.exec(replyText)) !== null) {
+        options.push(optionMatch[1].trim());
+      }
+      replyText = replyText.replace(/\[\[OPTION:.*?\]\]/g, '').trim();
+
       return NextResponse.json({
         reply: replyText,
         recommendedPlan,
+        options,
         provider: 'gemini',
       });
     } catch (genError: any) {

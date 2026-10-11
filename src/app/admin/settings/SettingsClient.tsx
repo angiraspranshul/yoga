@@ -16,6 +16,7 @@ import {
   Smartphone,
   Shield,
   Loader2,
+  Send,
 } from 'lucide-react';
 
 interface SettingsClientProps {
@@ -34,6 +35,25 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Test email state
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleSendTestEmail = async () => {
+    setTestEmailLoading(true);
+    setTestEmailResult(null);
+    try {
+      const res = await fetch('/api/admin/test-email', { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to dispatch test email');
+      setTestEmailResult({ success: true, message: data.message });
+    } catch (err: any) {
+      setTestEmailResult({ success: false, message: err?.message || 'Failed to send test email' });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,9 +179,47 @@ export default function SettingsClient({ initialSettings }: SettingsClientProps)
                   className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-xs focus:border-emerald-500 focus:outline-none"
                 />
               </div>
-              <p className="text-[11px] text-neutral-500">
-                Every new student enrollment and confidential health intake will be dispatched here.
-              </p>
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <p className="text-[11px] text-neutral-500">
+                  Every new student enrollment and confidential health intake will be dispatched here.
+                </p>
+                <button
+                  type="button"
+                  disabled={testEmailLoading}
+                  onClick={handleSendTestEmail}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-medium transition-colors flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                  title="Test email dispatch to this address"
+                >
+                  {testEmailLoading ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <span>Sending...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3 h-3" />
+                      <span>Send Test Email</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {testEmailResult && (
+                <div
+                  className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                    testEmailResult.success
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                      : 'bg-red-500/10 border-red-500/30 text-red-400'
+                  }`}
+                >
+                  {testEmailResult.success ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-red-400" />
+                  )}
+                  <span>{testEmailResult.message}</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
