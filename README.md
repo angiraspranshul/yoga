@@ -229,7 +229,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Public Website:** `http://localhost:3000`
 - **Admin Dashboard:** `http://localhost:3000/admin`
-- **Default Admin Credentials:** `dhaarna@yogawithdhaarna.com` / `admin_password_123` *(change in production)*
 
 ---
 
