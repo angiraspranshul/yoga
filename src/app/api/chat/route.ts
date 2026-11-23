@@ -5,6 +5,8 @@ import { Plan } from '@/types';
 import { chatSchema, parseJson } from '@/lib/validation';
 import { clientIp, enforceRateLimits } from '@/lib/rate-limit';
 
+const GEMINI_TIMEOUT_MS = 9000;
+
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
@@ -202,7 +204,11 @@ RULES ON RECOMMENDING A PLAN:
 (Replace PLAN_ID with the exact ID from the list above. Only include at most one tag).`;
 
     try {
-      const ai = new GoogleGenAI({ apiKey });
+      // One attempt with a hard time limit. The SDK otherwise retries 5xx/429
+      // errors up to 5 times with long back-off, which left visitors waiting
+      // minutes when Gemini was overloaded. On failure we use the offline replies.
+      // (Gemini rejects server deadlines under 10s, so the cut-off is client-side.)
+      const ai = new GoogleGenAI({ apiKey, httpOptions: { retryOptions: { attempts: 1 } } });
       const modelName = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
       // Format conversation history for Gemini
@@ -211,29 +217,16 @@ RULES ON RECOMMENDING A PLAN:
         parts: [{ text: m.content }],
       }));
 
-      let response;
-      try {
-        response = await ai.models.generateContent({
-          model: modelName,
-          contents: formattedContents,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          },
-        });
-      } catch (primaryModelErr: any) {
-        console.warn(`Model ${modelName} failed, retrying with gemini-3.8-flash:`, primaryModelErr?.message);
-        response = await ai.models.generateContent({
-          model: 'gemini-3.8-flash',
-          contents: formattedContents,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.7,
-            maxOutputTokens: 800,
-          },
-        });
-      }
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: formattedContents,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.7,
+          maxOutputTokens: 800,
+          abortSignal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
+        },
+      });
 
       let replyText = response.text || '';
 
