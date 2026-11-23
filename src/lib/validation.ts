@@ -108,15 +108,6 @@ export const orderUpdateSchema = z
 
 export const notificationUpdateSchema = z.object({ id });
 
-// ---------------------------------------------------------------- chat
-export const chatSchema = z.object({
-  messages: z
-    .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().min(1).max(2000) }))
-    .min(1)
-    .max(20)
-    .refine((m) => m[m.length - 1].role === 'user', 'last message must be from the user'),
-});
-
 // ---------------------------------------------------------------- helper
 type ParseResult<S extends ZodTypeAny> = { data: z.infer<S>; error?: never } | { data?: never; error: NextResponse };
 

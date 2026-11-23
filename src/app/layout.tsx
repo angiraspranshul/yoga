@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import YogaChatbot from '@/components/chat/YogaChatbot';
 
 export const metadata: Metadata = {
   title: 'Yoga with Dhaarna (@yogawithdhaarna) | Mindful Movement & Alignment',
@@ -40,7 +39,6 @@ export default function RootLayout({
       </head>
       <body className="bg-cream text-olive min-h-screen selection:bg-sage selection:text-cream antialiased">
         {children}
-        <YogaChatbot />
       </body>
     </html>
   );

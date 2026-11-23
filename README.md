@@ -2,7 +2,7 @@
 
 # 🧘 YogaFlow — Full-Stack Wellness & Studio Management Platform
 
-A modern, production-grade booking, client intake, and studio management platform engineered with **Next.js 14**, **TypeScript**, **Prisma ORM**, and **PostgreSQL (Supabase)**, featuring automated transactional emails via **Resend** and an intelligent AI yoga concierge powered by **Google Gemini**.
+A modern, production-grade booking, client intake, and studio management platform engineered with **Next.js 14**, **TypeScript**, **Prisma ORM**, and **PostgreSQL (Supabase)**, featuring automated transactional emails via **Resend**.
 
 [![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
@@ -10,7 +10,6 @@ A modern, production-grade booking, client intake, and studio management platfor
 [![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-336791?style=for-the-badge&logo=postgresql)](https://supabase.com/)
 [![Resend](https://img.shields.io/badge/Resend-Email_API-black?style=for-the-badge&logo=resend)](https://resend.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini_AI-3.8_Flash-8E75B2?style=for-the-badge&logo=googlegemini)](https://ai.google.dev/)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)](https://vercel.com/)
 
 [**Live Demo**](https://yoga-three-sage.vercel.app) &bull; [**Admin Dashboard**](https://yoga-three-sage.vercel.app/admin) &bull; [**Report Bug**](https://github.com/angiraspranshul/yoga/issues)
@@ -25,8 +24,7 @@ A modern, production-grade booking, client intake, and studio management platfor
 - [Key Features](#-key-features)
   - [Student & Client Portal](#1-student--client-portal)
   - [Admin Management Suite](#2-admin-management-suite-admin)
-  - [AI Yoga Concierge ("Prana")](#3-ai-yoga-concierge-prana)
-  - [Automated Email & Push Notifications](#4-automated-email--push-notifications)
+  - [Automated Email & Push Notifications](#3-automated-email--push-notifications)
 - [System Architecture](#-system-architecture)
 - [Engineering Highlights](#-engineering-highlights)
 - [Tech Stack](#-tech-stack)
@@ -69,13 +67,7 @@ It provides a high-converting, accessible public website with real-time class bo
 - **Real-Time Analytics:** Live dashboard cards displaying total collected revenue, active student count, unread alerts, and catalog size.
 - **Studio Branding & Preferences:** Configurable instructor bio, social media handles, and notification email routes.
 
-### 3. AI Yoga Concierge ("Prana")
-- **Powered by Google Gemini 3.8 Flash:** An intelligent, mindful virtual studio companion embedded into the frontend.
-- **Database Grounding:** Dynamically injects live studio plans and pricing into the prompt context for accurate, hallucination-free recommendations.
-- **Diagnostic Triage Mode:** Detects physical symptoms (e.g., lower back stiffness, tight hips) and enters a clarification phase with interactive multiple-choice question (MCQ) buttons before offering tailored sequences.
-- **Zero-Downtime Fallback Chain:** Seamlessly falls back to a rule-based intelligent offline responder if the external AI service is unreachable.
-
-### 4. Automated Email & Push Notifications
+### 3. Automated Email & Push Notifications
 - **Branded Transactional HTML Receipts:** Powered by **Resend**, dispatching beautiful mobile-responsive confirmation emails to students with booking references, intake summaries, and session preparation guidelines.
 - **Instructor Intake Alerts:** Instant email notification delivered to the instructor with the student's phone number, WhatsApp quick-link, and highlighted injury notes.
 - **Webhook Integration:** Real-time push notification dispatch to Discord, Telegram, or Slack webhooks upon checkout completion.
@@ -93,15 +85,15 @@ It provides a high-converting, accessible public website with real-time class bo
                                     │ HTTPS (API Route Handlers)
 ┌───────────────────────────────────▼────────────────────────────────────┐
 │                       Stateless Backend (Vercel)                       │
-│   • /api/plans          • /api/checkout        • /api/chat (Gemini)    │
+│   • /api/plans          • /api/checkout        • /api/admin/stats      │
 │   • /api/auth           • /api/admin/orders    • /api/admin/settings   │
 └──────────────┬────────────────────┬────────────────────┬───────────────┘
                │                    │                    │
-               │ Resend API         │ PgBouncer (6543)   │ Google GenAI
+               │ Resend API         │ PgBouncer (6543)   │ Discord (optional)
 ┌──────────────▼──────┐   ┌─────────▼───────────┐   ┌────▼──────────────┐
-│ Transactional Email │   │ PostgreSQL Database │   │ Google Gemini AI  │
-│  • Student Receipt  │   │  (Supabase Cloud)   │   │  • Studio Grounding│
-│  • Instructor Alert │   │  • Connection Pool  │   │  • Symptom Triage │
+│ Transactional Email │   │ PostgreSQL Database │   │ Booking Webhook   │
+│  • Student Receipt  │   │  (Supabase Cloud)   │   │  • Push alerts    │
+│  • Instructor Alert │   │  • Connection Pool  │   │                   │
 └─────────────────────┘   └─────────────────────┘   └───────────────────┘
 ```
 
@@ -132,7 +124,6 @@ It provides a high-converting, accessible public website with real-time class bo
 | **ORM** | [Prisma ORM 5](https://www.prisma.io/) | Type-safe queries, migrations, and schema definition |
 | **Connection Pool** | [Supavisor](https://github.com/supabase/supavisor) | Transaction pooling on port 6543 via PgBouncer |
 | **Email API** | [Resend](https://resend.com/) | Transactional HTML email delivery |
-| **AI / LLM** | [Google Gemini 3.8 Flash](https://ai.google.dev/) | Studio concierge & interactive symptom triage |
 | **Authentication** | JWT + bcryptjs | HttpOnly signed cookie session management |
 | **Icons** | [Lucide React](https://lucide.dev/) | Consistent iconography |
 | **Hosting & CI/CD** | [Vercel](https://vercel.com/) | Edge-cached serverless hosting with automatic Git deploys |
@@ -156,7 +147,6 @@ yoga-platform/
 │   │   ├── api/
 │   │   │   ├── admin/              # Protected admin route handlers
 │   │   │   ├── auth/               # Login, logout, session check
-│   │   │   ├── chat/               # Gemini AI concierge route with fallback
 │   │   │   ├── checkout/           # Order processing & notification dispatch
 │   │   │   └── plans/              # Public & admin plan endpoints
 │   │   ├── checkout/
@@ -165,7 +155,6 @@ yoga-platform/
 │   │   ├── layout.tsx              # Root layout & global metadata
 │   │   └── page.tsx                # Public landing page & studio showcase
 │   ├── components/
-│   │   ├── chat/                   # Interactive YogaChatbot component
 │   │   ├── midground/              # Practice & story visual sections
 │   │   ├── ultrahuman/             # Biomarkers & science comparison cards
 │   │   ├── Navbar.tsx              # Global navigation bar
@@ -194,7 +183,6 @@ yoga-platform/
 - **npm** or **pnpm**
 - A free **PostgreSQL database** (e.g. from [Supabase](https://supabase.com) or [Neon](https://neon.tech))
 - A free **Resend API Key** from [Resend.com](https://resend.com) (for transactional emails)
-- A free **Google Gemini API Key** from [Google AI Studio](https://aistudio.google.com/) (for the chatbot)
 
 ### 1. Clone the Repository
 ```bash
@@ -244,8 +232,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | `EMAIL_FROM` | Sender address for transactional emails | `Yoga Platform <onboarding@resend.dev>` |
 | `INSTRUCTOR_EMAIL` | Target email receiving new student intake alerts | `instructor@example.com` |
 | `DISCORD_WEBHOOK_URL` | Optional Discord/Slack webhook for instant mobile alerts | `https://discord.com/api/webhooks/...` |
-| `GEMINI_API_KEY` | Google Gemini API key for AI studio concierge | `AIzaSy...` |
-| `GEMINI_MODEL` | Gemini model variant | `gemini-3.8-flash` |
 | `NEXT_PUBLIC_APP_URL` | Base application URL | `http://localhost:3000` |
 
 ---
