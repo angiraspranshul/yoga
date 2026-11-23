@@ -1,5 +1,5 @@
 import React from 'react';
-import { getStats, getOrders } from '@/lib/db';
+import { getStats } from '@/lib/db';
 import { requireAdminPage } from '@/lib/auth';
 import {
   DollarSign,
@@ -19,7 +19,7 @@ export const revalidate = 0;
 export default async function AdminDashboardPage() {
   await requireAdminPage();
   const stats = await getStats();
-  const orders = await getOrders();
+  const orders = stats.recentOrders;
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
@@ -63,8 +63,13 @@ export default async function AdminDashboardPage() {
               ₹{stats.totalRevenue.toLocaleString('en-IN')}
             </span>
             <span className="text-[11px] text-emerald-400 block mt-1">
-              Online Payments Received
+              Marked as paid (excludes cancelled)
             </span>
+            {stats.pendingRevenue > 0 && (
+              <span className="text-[11px] text-amber-300 block">
+                ₹{stats.pendingRevenue.toLocaleString('en-IN')} awaiting payment
+              </span>
+            )}
           </div>
         </div>
 
@@ -134,7 +139,7 @@ export default async function AdminDashboardPage() {
             href="/admin/orders"
             className="text-xs font-mono uppercase text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
           >
-            <span>View All ({orders.length})</span>
+            <span>View All ({stats.totalBookings})</span>
             <ArrowUpRight className="w-3.5 h-3.5" />
           </a>
         </div>

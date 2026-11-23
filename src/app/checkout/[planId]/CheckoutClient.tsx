@@ -38,6 +38,11 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // One key per form: if the request is retried or double-submitted, the
+  // server returns the same booking instead of creating a duplicate.
+  const [idempotencyKey] = useState(() =>
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : undefined
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +69,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
           preferredSlot,
           clientMessage,
           paymentMethod,
+          idempotencyKey,
         }),
       });
 
@@ -122,6 +128,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   placeholder="e.g. Priya Sharma"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -139,6 +146,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
                 <input
                   type="email"
                   required
+                  maxLength={254}
                   placeholder="e.g. priya@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -156,6 +164,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
               <Phone className="w-4 h-4 text-olive/40 absolute left-3.5 top-3.5 pointer-events-none" />
               <input
                 type="tel"
+                maxLength={20}
                 placeholder="+91 98765 43210"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
@@ -208,6 +217,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
             </label>
             <textarea
               rows={2}
+              maxLength={1000}
               placeholder="e.g. Lower back stiffness, past neck strain, wrist sensitivity, or none."
               value={healthNotes}
               onChange={(e) => setHealthNotes(e.target.value)}
@@ -221,6 +231,7 @@ export default function CheckoutClient({ plan, settings }: CheckoutClientProps) 
             </label>
             <input
               type="text"
+              maxLength={500}
               placeholder="e.g. Want to relieve desk stiffness and build daily consistency."
               value={clientMessage}
               onChange={(e) => setClientMessage(e.target.value)}

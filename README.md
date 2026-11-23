@@ -217,7 +217,7 @@ Open `.env` and fill in your database connection string and secret keys (see [En
 ### 4. Push Database Schema & Seed Data
 ```bash
 npx prisma generate
-npx prisma db push
+npx prisma migrate deploy
 node scripts/seed.js
 ```
 
@@ -261,8 +261,8 @@ The database models are managed via Prisma in `prisma/schema.prisma`:
 
 ### Useful Prisma Commands:
 ```bash
-# Push schema updates to database without generating migration files
-npx prisma db push
+# Apply pending migrations (prisma/migrations) to the database in .env
+npx prisma migrate deploy
 
 # Open visual database browser in browser
 npx prisma studio

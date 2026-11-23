@@ -194,7 +194,7 @@ export default function PlansManagerClient({ initialPlans }: PlansManagerClientP
         throw new Error(data.error || 'Failed to delete plan');
       }
       setPlans(plans.filter((p) => p.id !== id));
-      setNotice({ type: 'success', message: 'Plan successfully deleted and removed from website.' });
+      setNotice({ type: 'success', message: data.message || 'Plan deleted and removed from website.' });
       router.refresh();
     } catch (e: any) {
       console.error('Failed to delete:', e);

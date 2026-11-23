@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getNotifications, markNotificationRead } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { notificationUpdateSchema, parseJson } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +27,10 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await request.json();
-    if (!id) {
-      return NextResponse.json({ error: 'Notification ID required' }, { status: 400 });
-    }
+    const parsed = await parseJson(request, notificationUpdateSchema);
+    if (parsed.error) return parsed.error;
 
-    const success = await markNotificationRead(id);
+    const success = await markNotificationRead(parsed.data.id);
     return NextResponse.json({ success });
   } catch (error) {
     console.error('Failed to mark notification read:', error);

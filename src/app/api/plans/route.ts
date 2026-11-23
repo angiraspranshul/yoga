@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getPlans, createPlan } from '@/lib/db';
+import { getPlans, createPlan, INR_PER_USD } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { parseJson, planCreateSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,9 +21,9 @@ export async function GET(request: Request) {
 
     const plans = await getPlans(includeInactive);
     return NextResponse.json(plans);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to get plans:', error);
-    return NextResponse.json({ error: 'Failed to fetch plans', detail: error?.message || String(error) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch plans' }, { status: 500 });
   }
 }
 
@@ -33,38 +34,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized: Admin access required' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { title, description, price, duration, type, level, features, badge, imageUrl, isFeatured } = body;
+    const parsed = await parseJson(request, planCreateSchema);
+    if (parsed.error) return parsed.error;
+    const input = parsed.data;
 
-    if (!title || !description || !price || !duration) {
-      return NextResponse.json({ error: 'Missing required plan fields' }, { status: 400 });
-    }
-
-    const slug = body.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = input.slug || input.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
     const newPlan = await createPlan({
-      title,
+      ...input,
       slug,
-      description,
-      price: Number(price),
-      currency: body.currency || 'INR',
-      priceUsd: body.priceUsd ? Number(body.priceUsd) : Math.round(Number(price) / 75),
-      duration,
-      type: type || 'BATCH',
-      level: level || 'ALL_LEVELS',
-      features: Array.isArray(features) ? features : (features ? [features] : []),
-      badge: badge || null,
-      imageUrl: imageUrl || null,
-      isActive: body.isActive !== undefined ? Boolean(body.isActive) : true,
-      isFeatured: body.isFeatured !== undefined ? Boolean(body.isFeatured) : false,
+      priceUsd: input.priceUsd ?? Math.round(input.price / INR_PER_USD),
+      badge: input.badge ?? null,
+      imageUrl: input.imageUrl ?? null,
     });
 
     revalidatePath('/', 'layout');
-    revalidatePath('/checkout/[planId]', 'page');
 
     return NextResponse.json(newPlan, { status: 201 });
   } catch (error: any) {
+    if (error?.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A plan with this title/slug already exists (possibly a deleted plan kept for its bookings). Please use a different title.' },
+        { status: 409 }
+      );
+    }
     console.error('Failed to create plan:', error);
-    return NextResponse.json({ error: 'Failed to create plan', detail: error?.message || String(error) }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create plan' }, { status: 500 });
   }
 }

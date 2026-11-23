@@ -63,13 +63,24 @@ function formatOrder(r: any): Order {
 // PLANS
 // -------------------------------------------------------------
 
+/** Rough conversion used only when an admin leaves the USD price empty. */
+export const INR_PER_USD = 85;
+
+/** Archived plans (deleted but kept for order history) are never listed. */
 export async function getPlans(includeInactive = false): Promise<Plan[]> {
   const db = requireDb();
   const records = await db.plan.findMany({
-    where: includeInactive ? undefined : { isActive: true },
+    where: includeInactive ? { archivedAt: null } : { isActive: true, archivedAt: null },
     orderBy: [{ isFeatured: 'desc' }, { createdAt: 'desc' }],
   });
   return records.map(formatPlan);
+}
+
+/** A plan customers may view and book: active and not archived. */
+export async function getBookablePlanById(id: string): Promise<Plan | null> {
+  const db = requireDb();
+  const p = await db.plan.findFirst({ where: { id, isActive: true, archivedAt: null } });
+  return p ? formatPlan(p) : null;
 }
 
 export async function getPlanBySlug(slug: string): Promise<Plan | null> {
@@ -93,7 +104,7 @@ export async function createPlan(data: Omit<Plan, 'id' | 'createdAt' | 'updatedA
       description: data.description,
       price: data.price,
       currency: data.currency || 'INR',
-      priceUsd: data.priceUsd || Math.round(data.price / 80),
+      priceUsd: data.priceUsd || Math.round(data.price / INR_PER_USD),
       duration: data.duration,
       type: data.type,
       level: data.level,
@@ -107,115 +118,139 @@ export async function createPlan(data: Omit<Plan, 'id' | 'createdAt' | 'updatedA
   return formatPlan(created);
 }
 
-export async function updatePlan(id: string, data: Partial<Plan>): Promise<Plan | null> {
+/** Editable plan fields only (already validated by planUpdateSchema). */
+export type PlanUpdate = Partial<
+  Pick<Plan, 'title' | 'slug' | 'description' | 'price' | 'priceUsd' | 'currency' | 'duration' | 'type' | 'level' | 'features' | 'badge' | 'imageUrl' | 'isActive' | 'isFeatured'>
+>;
+
+export async function updatePlan(id: string, data: PlanUpdate): Promise<Plan | null> {
   const db = requireDb();
   try {
+    const { features, ...rest } = data;
     const updated = await db.plan.update({
-      where: { id },
+      where: { id, archivedAt: null },
       data: {
-        ...data,
-        features: data.features ? JSON.stringify(data.features) : undefined,
+        ...rest,
+        ...(features !== undefined ? { features: JSON.stringify(features) } : {}),
       },
     });
     return formatPlan(updated);
   } catch (e: any) {
-    if (e?.code === 'P2025') return null; // Record not found
+    if (e?.code === 'P2025') return null; // Record not found (or archived)
     throw e;
   }
 }
 
-export async function deletePlan(id: string): Promise<boolean> {
+/**
+ * Deletes a plan. If it has bookings, it is archived instead (hidden everywhere,
+ * but kept so its orders and revenue history are not lost).
+ */
+export async function deletePlan(id: string): Promise<'deleted' | 'archived' | 'not_found'> {
   const db = requireDb();
-  try {
-    // First delete associated orders to prevent foreign key constraint violations
-    await db.order.deleteMany({ where: { planId: id } });
-    await db.plan.delete({ where: { id } });
-    return true;
-  } catch (e: any) {
-    if (e?.code === 'P2025') return false; // Record not found
-    throw e;
-  }
+  return db.$transaction(async (tx) => {
+    const plan = await tx.plan.findFirst({ where: { id, archivedAt: null }, select: { id: true } });
+    if (!plan) return 'not_found';
+    const orderCount = await tx.order.count({ where: { planId: id } });
+    if (orderCount === 0) {
+      await tx.plan.delete({ where: { id } });
+      return 'deleted';
+    }
+    await tx.plan.update({
+      where: { id },
+      data: { archivedAt: new Date(), isActive: false, isFeatured: false },
+    });
+    return 'archived';
+  });
 }
 
 // -------------------------------------------------------------
 // ORDERS
 // -------------------------------------------------------------
 
+function formatClient(c: { id: string; fullName: string; email: string; phone: string | null; createdAt: Date }): Client {
+  return { id: c.id, fullName: c.fullName, email: c.email, phone: c.phone, createdAt: c.createdAt.toISOString() };
+}
+
+/**
+ * Creates the client (if new), order and admin notification in one transaction.
+ * With an idempotency key, a repeated submission returns the original order
+ * (`created: false`) instead of booking twice.
+ * The caller must pass a plan that is bookable (see getBookablePlanById).
+ */
 export async function createOrder(payload: {
-  planId: string;
+  plan: Plan;
   fullName: string;
   email: string;
   phone?: string;
-  paymentMethod?: string;
+  paymentMethod: string;
   experienceLevel?: string;
   healthNotes?: string;
   preferredSlot?: string;
   clientMessage?: string;
-}): Promise<{ order: Order; client: Client; notification: NotificationItem }> {
+  idempotencyKey?: string;
+}): Promise<{ order: Order; client: Client; created: boolean }> {
   const db = requireDb();
-  const plan = await getPlanById(payload.planId);
-  if (!plan) {
-    throw new Error(`Plan with id "${payload.planId}" not found`);
-  }
+  const { plan } = payload;
 
-  // Find or create client
-  let dbClient = await db.client.findFirst({ where: { email: payload.email } });
-  if (!dbClient) {
-    dbClient = await db.client.create({
-      data: {
-        fullName: payload.fullName,
-        email: payload.email,
-        phone: payload.phone,
-      },
+  const findExisting = async () => {
+    if (!payload.idempotencyKey) return null;
+    const existing = await db.order.findUnique({
+      where: { idempotencyKey: payload.idempotencyKey },
+      include: { plan: true, client: true },
     });
-  }
-
-  // Create order
-  const dbOrder = await db.order.create({
-    data: {
-      planId: plan.id,
-      clientId: dbClient.id,
-      amount: plan.price,
-      currency: plan.currency,
-      status: 'NEW',
-      paymentMethod: payload.paymentMethod || 'CARD',
-      paymentStatus: 'PAID',
-      experienceLevel: payload.experienceLevel,
-      healthNotes: payload.healthNotes,
-      preferredSlot: payload.preferredSlot,
-      clientMessage: payload.clientMessage,
-    },
-    include: { plan: true, client: true },
-  });
-
-  // Create notification
-  const dbNotif = await db.notification.create({
-    data: {
-      title: `New Yoga Booking: ${plan.title}`,
-      message: `${payload.fullName} enrolled in ${plan.title} (₹${plan.price.toLocaleString('en-IN')}).`,
-      orderId: dbOrder.id,
-      isRead: false,
-    },
-  });
-
-  return {
-    order: formatOrder(dbOrder),
-    client: {
-      id: dbClient.id,
-      fullName: dbClient.fullName,
-      email: dbClient.email,
-      phone: dbClient.phone,
-      createdAt: dbClient.createdAt.toISOString(),
-    },
-    notification: {
-      id: dbNotif.id,
-      title: dbNotif.title,
-      message: dbNotif.message,
-      orderId: dbOrder.id,
-      isRead: false,
-      createdAt: dbNotif.createdAt.toISOString(),
-    },
+    return existing ? { order: formatOrder(existing), client: formatClient(existing.client), created: false } : null;
   };
+
+  const duplicate = await findExisting();
+  if (duplicate) return duplicate;
+
+  try {
+    return await db.$transaction(async (tx) => {
+      // Existing students keep their stored name/phone: an unauthenticated form
+      // must not be able to overwrite another person's details.
+      const dbClient = await tx.client.upsert({
+        where: { email: payload.email },
+        update: {},
+        create: { fullName: payload.fullName, email: payload.email, phone: payload.phone },
+      });
+
+      const dbOrder = await tx.order.create({
+        data: {
+          planId: plan.id,
+          clientId: dbClient.id,
+          amount: plan.price,
+          currency: plan.currency,
+          status: 'NEW',
+          paymentMethod: payload.paymentMethod,
+          // No payment gateway yet (Phase 2): nothing has been charged.
+          paymentStatus: 'PENDING',
+          experienceLevel: payload.experienceLevel,
+          healthNotes: payload.healthNotes,
+          preferredSlot: payload.preferredSlot,
+          clientMessage: payload.clientMessage,
+          idempotencyKey: payload.idempotencyKey,
+        },
+        include: { plan: true, client: true },
+      });
+
+      await tx.notification.create({
+        data: {
+          title: `New Yoga Booking: ${plan.title}`,
+          message: `${payload.fullName} enrolled in ${plan.title} (₹${plan.price.toLocaleString('en-IN')}).`,
+          orderId: dbOrder.id,
+        },
+      });
+
+      return { order: formatOrder(dbOrder), client: formatClient(dbClient), created: true };
+    });
+  } catch (e: any) {
+    // Two identical submissions raced: the other one won, return its order.
+    if (e?.code === 'P2002' && payload.idempotencyKey) {
+      const raced = await findExisting();
+      if (raced) return raced;
+    }
+    throw e;
+  }
 }
 
 export async function getOrders(): Promise<Order[]> {
@@ -236,12 +271,15 @@ export async function getOrderById(id: string): Promise<Order | null> {
   return record ? formatOrder(record) : null;
 }
 
-export async function updateOrderStatus(orderId: string, status: Order['status']): Promise<Order | null> {
+export async function updateOrder(
+  orderId: string,
+  data: { status?: Order['status']; paymentStatus?: 'PENDING' | 'PAID' | 'REFUNDED' }
+): Promise<Order | null> {
   const db = requireDb();
   try {
     const updated = await db.order.update({
       where: { id: orderId },
-      data: { status },
+      data,
       include: { plan: true, client: true },
     });
     return formatOrder(updated);
@@ -291,7 +329,7 @@ export async function getSettings(): Promise<Settings> {
   return s || INITIAL_SETTINGS;
 }
 
-export async function updateSettings(data: Partial<Settings>): Promise<Settings> {
+export async function updateSettings(data: Partial<Omit<Settings, 'id'>>): Promise<Settings> {
   // If instagramHandle was provided, sync the url
   if (data.instagramHandle) {
     const cleanHandle = data.instagramHandle.replace('@', '').trim();
@@ -312,20 +350,25 @@ export async function updateSettings(data: Partial<Settings>): Promise<Settings>
 // -------------------------------------------------------------
 
 export async function getStats() {
-  const orders = await getOrders();
-  const plans = await getPlans(true);
-  const notifications = await getNotifications();
-
-  const totalRevenue = orders.reduce((sum, o) => (o.paymentStatus === 'PAID' ? sum + o.amount : sum), 0);
-  const activeOrders = orders.filter((o) => o.status === 'NEW' || o.status === 'CONFIRMED').length;
-  const unreadNotifs = notifications.filter((n) => !n.isRead).length;
+  const db = requireDb();
+  const [revenue, pending, totalBookings, activeOrders, activePlans, unreadNotifs, recent] = await Promise.all([
+    // Revenue counts only orders marked PAID that were not cancelled.
+    db.order.aggregate({ _sum: { amount: true }, where: { paymentStatus: 'PAID', status: { not: 'CANCELLED' } } }),
+    db.order.aggregate({ _sum: { amount: true }, where: { paymentStatus: 'PENDING', status: { not: 'CANCELLED' } } }),
+    db.order.count(),
+    db.order.count({ where: { status: { in: ['NEW', 'CONFIRMED'] } } }),
+    db.plan.count({ where: { isActive: true, archivedAt: null } }),
+    db.notification.count({ where: { isRead: false } }),
+    db.order.findMany({ include: { plan: true, client: true }, orderBy: { createdAt: 'desc' }, take: 5 }),
+  ]);
 
   return {
-    totalRevenue,
-    totalBookings: orders.length,
+    totalRevenue: revenue._sum.amount ?? 0,
+    pendingRevenue: pending._sum.amount ?? 0,
+    totalBookings,
     activeOrders,
-    activePlans: plans.filter((p) => p.isActive).length,
+    activePlans,
     unreadNotifs,
-    recentOrders: orders.slice(0, 5),
+    recentOrders: recent.map(formatOrder),
   };
 }

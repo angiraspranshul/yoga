@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { getOrders, updateOrderStatus } from '@/lib/db';
+import { getOrders, updateOrder } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { orderUpdateSchema, parseJson } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,23 +28,21 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { orderId, status } = await request.json();
-    if (!orderId || !status) {
-      return NextResponse.json({ error: 'Missing orderId or status' }, { status: 400 });
-    }
+    const parsed = await parseJson(request, orderUpdateSchema);
+    if (parsed.error) return parsed.error;
+    const { orderId, status, paymentStatus } = parsed.data;
 
-    const updated = await updateOrderStatus(orderId, status);
+    const updated = await updateOrder(orderId, { status, paymentStatus });
     if (!updated) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    revalidatePath('/checkout/success', 'page');
     revalidatePath('/admin/orders', 'page');
     revalidatePath('/admin', 'page');
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error('Failed to update order status:', error);
+    console.error('Failed to update order:', error);
     return NextResponse.json({ error: 'Failed to update order' }, { status: 500 });
   }
 }

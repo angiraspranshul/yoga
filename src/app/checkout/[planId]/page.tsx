@@ -2,7 +2,7 @@ import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CheckoutClient from './CheckoutClient';
-import { getPlanById, getSettings } from '@/lib/db';
+import { getBookablePlanById, getSettings } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, ShieldCheck, Check, Clock } from 'lucide-react';
 
@@ -16,7 +16,7 @@ interface CheckoutPageProps {
 
 export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const [plan, settings] = await Promise.all([
-    getPlanById(params.planId),
+    getBookablePlanById(params.planId),
     getSettings(),
   ]);
 

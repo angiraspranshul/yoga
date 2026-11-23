@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
-    "prisma:seed": "node scripts/seed.js"
+    "prisma:seed": "node scripts/seed.js",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:status": "prisma migrate status",
+    "admin:set-password": "node scripts/set-admin-password.js"
   },
   "dependencies": {
     "@google/genai": "^2.27.0",
@@ -22,7 +24,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "resend": "^6.32.1",
-    "tailwind-merge": "^2.5.5"
+    "tailwind-merge": "^2.5.5",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

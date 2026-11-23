@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getSettings, updateSettings } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { parseJson, settingsUpdateSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,12 +28,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const updated = await updateSettings(body);
+    const parsed = await parseJson(request, settingsUpdateSchema);
+    if (parsed.error) return parsed.error;
+    const updated = await updateSettings(parsed.data);
 
     revalidatePath('/', 'layout');
-    revalidatePath('/checkout/[planId]', 'page');
-    revalidatePath('/checkout/success', 'page');
 
     return NextResponse.json(updated);
   } catch (error) {

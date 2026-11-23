@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getAdminSession } from '@/lib/auth';
 import { getSettings } from '@/lib/db';
 import { sendEmail, isEmailServiceConfigured } from '@/lib/email';
+import { escapeHtml } from '@/lib/email-templates';
+import { enforceRateLimits } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,9 +14,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const limited = await enforceRateLimits([
+      { name: 'test-email', subject: session.email, limit: 5, windowSeconds: 60 * 60 },
+    ]);
+    if (limited) return limited;
+
     const settings = await getSettings();
     const targetEmail = settings.notificationEmail || process.env.INSTRUCTOR_EMAIL || 'dhaarna@yogawithdhaarna.com';
-    const instructorName = settings.instructorName || 'Dhaarna Sharma';
+    const instructorName = escapeHtml(settings.instructorName || 'Dhaarna Sharma');
 
     const isConfigured = isEmailServiceConfigured();
 
@@ -71,6 +78,6 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Test email route error:', error);
-    return NextResponse.json({ error: error?.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to send test email' }, { status: 500 });
   }
 }

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { getPlans, getSettings } from '@/lib/db';
 import { Plan } from '@/types';
+import { chatSchema, parseJson } from '@/lib/validation';
+import { clientIp, enforceRateLimits } from '@/lib/rate-limit';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -112,12 +114,16 @@ function generateFallbackResponse(
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const messages: ChatMessage[] = body.messages || [];
+    const parsed = await parseJson(req, chatSchema);
+    if (parsed.error) return parsed.error;
+    const messages: ChatMessage[] = parsed.data.messages;
 
-    if (!messages.length) {
-      return NextResponse.json({ error: 'Messages are required' }, { status: 400 });
-    }
+    // Caps Gemini usage per visitor and in total.
+    const limited = await enforceRateLimits([
+      { name: 'chat-ip', subject: clientIp(req), limit: 20, windowSeconds: 10 * 60 },
+      { name: 'chat-global', subject: 'global', limit: 1000, windowSeconds: 24 * 60 * 60 },
+    ]);
+    if (limited) return limited;
 
     const lastUserMessage = messages[messages.length - 1].content;
 

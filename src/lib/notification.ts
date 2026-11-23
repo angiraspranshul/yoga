@@ -51,8 +51,12 @@ export async function dispatchOrderNotifications(params: {
     }
   })();
 
-  // Prepare Email 2: To the Instructor (Intake & Enrollment Alert)
+  // Prepare Email 2: To the Instructor (Intake & Enrollment Alert), unless turned off in Settings
   const instructorEmailPromise = (async () => {
+    if (settings && settings.emailNotifications === false) {
+      console.log('Instructor email alerts are turned off in Settings; skipping.');
+      return;
+    }
     try {
       const instructorHtml = getInstructorAlertEmailHtml({
         order,
@@ -79,7 +83,10 @@ export async function dispatchOrderNotifications(params: {
   const webhookPromise = (async () => {
     if (webhookUrl && webhookUrl.startsWith('http')) {
       try {
+        // Discord field values are capped at 1024 chars; never ping @everyone etc.
+        const cap = (v: string) => (v.length > 1000 ? v.slice(0, 1000) + '…' : v);
         const payload = {
+          allowed_mentions: { parse: [] },
           content: `🧘 **New Yoga Booking Alert for @yogawithdhaarna!**`,
           embeds: [
             {
@@ -92,7 +99,7 @@ export async function dispatchOrderNotifications(params: {
                 { name: '📧 Email', value: client.email, inline: true },
                 { name: '🧘 Experience', value: order.experienceLevel || 'Beginner', inline: true },
                 { name: '⏰ Preferred Slot', value: order.preferredSlot || 'Flexible', inline: true },
-                { name: '🩺 Health Notes', value: order.healthNotes || 'None' },
+                { name: '🩺 Health Notes', value: cap(order.healthNotes || 'None') },
               ],
               footer: { text: `Order ID: ${order.id} • Yoga with Dhaarna Platform` },
               timestamp: new Date().toISOString(),

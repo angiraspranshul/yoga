@@ -33,12 +33,17 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const handleUpdateStatus = async (orderId: string, status: Order['status']) => {
+  const handleUpdateStatus = (orderId: string, status: Order['status']) => updateOrder(orderId, { status });
+
+  const updateOrder = async (
+    orderId: string,
+    changes: { status?: Order['status']; paymentStatus?: 'PENDING' | 'PAID' | 'REFUNDED' }
+  ) => {
     try {
       const res = await fetch('/api/admin/orders', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, status }),
+        body: JSON.stringify({ orderId, ...changes }),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -168,6 +173,17 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
                         >
                           {order.status}
                         </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold uppercase ${
+                            order.paymentStatus === 'PAID'
+                              ? 'bg-emerald-500/20 text-emerald-300'
+                              : order.paymentStatus === 'REFUNDED'
+                              ? 'bg-neutral-800 text-neutral-400'
+                              : 'bg-amber-500/20 text-amber-300'
+                          }`}
+                        >
+                          {order.paymentStatus === 'PAID' ? 'PAID' : order.paymentStatus === 'REFUNDED' ? 'REFUNDED' : 'UNPAID'}
+                        </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-400">
                         <span>{order.client?.email}</span>
@@ -265,7 +281,23 @@ export default function OrdersClient({ initialOrders }: OrdersClientProps) {
                         </a>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {order.paymentStatus !== 'PAID' ? (
+                          <button
+                            onClick={() => updateOrder(order.id, { paymentStatus: 'PAID' })}
+                            title="Use after you have received this payment (e.g. by UPI)"
+                            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/15 text-xs flex items-center gap-1"
+                          >
+                            <span>₹ Mark Paid</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => updateOrder(order.id, { paymentStatus: 'PENDING' })}
+                            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-400 border border-white/10 text-xs flex items-center gap-1"
+                          >
+                            <span>Mark Unpaid</span>
+                          </button>
+                        )}
                         {order.status !== 'CONFIRMED' && (
                           <button
                             onClick={() => handleUpdateStatus(order.id, 'CONFIRMED')}

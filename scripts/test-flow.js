@@ -34,7 +34,7 @@ async function main() {
     healthNotes: 'Cervical neck stiffness and mild lumbar fatigue from 10hr desk job.',
     preferredSlot: 'Morning 7:00 AM IST',
     clientMessage: 'Looking forward to learning safe alignment and breathwork!',
-    paymentMethod: 'DEMO_CHECKOUT',
+    paymentMethod: 'UPI',
   };
 
   const checkoutRes = await apiCall('/api/checkout', {
@@ -48,8 +48,6 @@ async function main() {
   }
   console.log('✅ Checkout Successful!');
   console.log(`   - Booking Reference: ${checkoutRes.data.bookingId}`);
-  console.log(`   - Student Enrolled:  ${checkoutRes.data.client.fullName}`);
-  console.log(`   - Notification Sent: "${checkoutRes.data.notification.title}"`);
 
   // 3. Admin Login
   console.log('\n3️⃣ Testing Admin Authentication (/api/auth/login)...');

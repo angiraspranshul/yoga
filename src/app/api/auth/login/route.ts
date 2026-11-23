@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 import { signAdminToken, COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/auth';
 import { isSessionSecretConfigured } from '@/lib/session';
+import { clientIp, enforceRateLimits } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,14 @@ export async function POST(request: Request) {
     if (!email || !password || email.length > 254 || password.length > 200) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
+
+    // Brute-force protection: per IP+email, and per IP across all emails.
+    const ip = clientIp(request);
+    const limited = await enforceRateLimits([
+      { name: 'login-ip-email', subject: `${ip}|${email}`, limit: 5, windowSeconds: 15 * 60 },
+      { name: 'login-ip', subject: ip, limit: 20, windowSeconds: 15 * 60 },
+    ]);
+    if (limited) return limited;
 
     const admin = await prisma.admin.findUnique({ where: { email } });
     const passwordOk = await bcrypt.compare(password, admin?.passwordHash ?? getDummyHash());

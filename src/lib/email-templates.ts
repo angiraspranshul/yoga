@@ -1,5 +1,22 @@
 import { Order, Client, Plan } from '@/types';
 
+const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+export function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch]);
+}
+
+// Returns a copy with every string (including nested ones) HTML-escaped, so the
+// templates below can interpolate values directly without injection risk.
+function escapeAll<T>(value: T, depth = 0): T {
+  if (typeof value === 'string') return escapeHtml(value) as T;
+  if (depth > 4 || value === null || typeof value !== 'object') return value;
+  if (Array.isArray(value)) return value.map((v) => escapeAll(v, depth + 1)) as T;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = escapeAll(v, depth + 1);
+  return out as T;
+}
+
 interface StudentEmailParams {
   order: Order;
   client: Client;
@@ -17,7 +34,7 @@ interface InstructorEmailParams {
 }
 
 export function getStudentBookingEmailHtml(params: StudentEmailParams): string {
-  const { order, client, plan, instructorName, instagramHandle, instructorEmail } = params;
+  const { order, client, plan, instructorName, instagramHandle, instructorEmail } = escapeAll(params);
   const firstName = client.fullName.split(' ')[0] || 'Friend';
   const cleanHandle = instagramHandle.replace('@', '');
   const instagramUrl = `https://instagram.com/${cleanHandle}`;
@@ -166,7 +183,7 @@ export function getStudentBookingEmailHtml(params: StudentEmailParams): string {
 }
 
 export function getInstructorAlertEmailHtml(params: InstructorEmailParams): string {
-  const { order, client, plan, adminDashboardUrl } = params;
+  const { order, client, plan, adminDashboardUrl } = escapeAll(params);
 
   return `
 <!DOCTYPE html>
