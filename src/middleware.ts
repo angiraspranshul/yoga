@@ -1,26 +1,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { COOKIE_NAME, verifyAdminToken } from '@/lib/session';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  // Verify the signature and expiry, not just the cookie's presence.
+  const session = token ? await verifyAdminToken(token) : null;
 
-  // Protect all /admin routes except /admin/login
-  if (pathname.startsWith('/admin') && !pathname.startsWith('/admin/login')) {
-    const sessionToken = request.cookies.get('dhaarna_admin_session')?.value;
+  const isLoginPage = pathname === '/admin/login' || pathname.startsWith('/admin/login/');
 
-    if (!sessionToken) {
-      const loginUrl = new URL('/admin/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+  if (!isLoginPage && !session) {
+    const loginUrl = new URL('/admin/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    const response = NextResponse.redirect(loginUrl);
+    if (token) response.cookies.delete(COOKIE_NAME); // drop invalid/expired cookie
+    return response;
   }
 
-  // If already logged in and visiting /admin/login, redirect to /admin
-  if (pathname === '/admin/login') {
-    const sessionToken = request.cookies.get('dhaarna_admin_session')?.value;
-    if (sessionToken) {
-      return NextResponse.redirect(new URL('/admin', request.url));
-    }
+  // Already signed in and visiting the login page: go to the dashboard.
+  if (isLoginPage && session) {
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
 
   return NextResponse.next();

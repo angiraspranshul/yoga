@@ -1,37 +1,46 @@
 import { NextResponse } from 'next/server';
-import { signAdminToken, COOKIE_NAME } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+import { prisma } from '@/lib/prisma';
+import { signAdminToken, COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/auth';
+import { isSessionSecretConfigured } from '@/lib/session';
 
-const ADMIN_EMAIL = process.env.ADMIN_DEFAULT_EMAIL || 'dhaarna@yogawithdhaarna.com';
-const ADMIN_PASSWORD = process.env.ADMIN_DEFAULT_PASSWORD || 'admin_password_123';
+export const dynamic = 'force-dynamic';
+
+// Compared against when the email is unknown, so response time does not
+// reveal whether an admin account exists for that email.
+let dummyHash: string | null = null;
+function getDummyHash(): string {
+  if (!dummyHash) dummyHash = bcrypt.hashSync('dummy-password-for-timing', 12);
+  return dummyHash;
+}
 
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    if (!isSessionSecretConfigured() || !prisma) {
+      console.error('Login unavailable: JWT_SECRET or DATABASE_URL is not configured.');
+      return NextResponse.json({ error: 'Login is temporarily unavailable' }, { status: 503 });
+    }
 
-    if (!email || !password) {
+    const body = await request.json().catch(() => null);
+    const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
+    const password = typeof body?.password === 'string' ? body.password : '';
+
+    if (!email || !password || email.length > 254 || password.length > 200) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    // Check credentials (supports default credentials and .env configuration)
-    const normalizedInputEmail = email.trim().toLowerCase();
-    const normalizedAdminEmail = ADMIN_EMAIL.trim().toLowerCase();
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    const passwordOk = await bcrypt.compare(password, admin?.passwordHash ?? getDummyHash());
 
-    if (normalizedInputEmail !== normalizedAdminEmail || password !== ADMIN_PASSWORD) {
+    if (!admin || !passwordOk) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = signAdminToken({
-      email: normalizedAdminEmail,
-      name: 'Dhaarna Sharma',
-      role: 'admin',
-    });
+    const token = await signAdminToken({ email: admin.email, name: admin.name, role: 'admin' });
 
     const response = NextResponse.json({
       success: true,
-      user: {
-        email: normalizedAdminEmail,
-        name: 'Dhaarna Sharma',
-      },
+      user: { email: admin.email, name: admin.name },
     });
 
     response.cookies.set(COOKIE_NAME, token, {
@@ -39,7 +48,7 @@ export async function POST(request: Request) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
 
     return response;

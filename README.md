@@ -229,6 +229,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **Public Website:** `http://localhost:3000`
 - **Admin Dashboard:** `http://localhost:3000/admin`
+- **Admin Account:** there is no default login. Create or reset the admin with `node scripts/set-admin-password.js` (it prompts for email and password and stores a bcrypt hash in the `Admin` table).
 
 ---
 
@@ -238,9 +239,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Supabase connection string via Pooler (port `6543`) | `postgresql://...:6543/postgres?pgbouncer=true` |
 | `DIRECT_URL` | Direct database connection for Prisma CLI (port `5432`) | `postgresql://...:5432/postgres` |
-| `JWT_SECRET` | Secret key used to sign admin session tokens | `your_super_secret_jwt_key` |
-| `ADMIN_DEFAULT_EMAIL` | Default administrator email | `admin@example.com` |
-| `ADMIN_DEFAULT_PASSWORD` | Default administrator password | `change_me_in_production` |
+| `JWT_SECRET` | **Required**, at least 32 characters. Signs admin session tokens. Generate with `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` | *(no default; the app refuses logins without it)* |
 | `RESEND_API_KEY` | Resend API key for transactional email dispatch | `re_123456789...` |
 | `EMAIL_FROM` | Sender address for transactional emails | `Yoga Platform <onboarding@resend.dev>` |
 | `INSTRUCTOR_EMAIL` | Target email receiving new student intake alerts | `instructor@example.com` |

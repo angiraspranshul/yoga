@@ -1,5 +1,6 @@
 import React from 'react';
 import { getStats, getOrders } from '@/lib/db';
+import { requireAdminPage } from '@/lib/auth';
 import {
   DollarSign,
   Users,
@@ -16,6 +17,7 @@ import {
 export const revalidate = 0;
 
 export default async function AdminDashboardPage() {
+  await requireAdminPage();
   const stats = await getStats();
   const orders = await getOrders();
 

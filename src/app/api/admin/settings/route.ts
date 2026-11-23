@@ -7,6 +7,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const session = await getAdminSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const settings = await getSettings();
     return NextResponse.json(settings);
   } catch (error) {

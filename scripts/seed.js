@@ -1,23 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Seeding online database for Yoga with Dhaarna...');
 
-  // 1. Seed Admin
-  const defaultPasswordHash = await bcrypt.hash('admin_password_123', 10);
-  await prisma.admin.upsert({
-    where: { email: 'dhaarna@yogawithdhaarna.com' },
-    update: {},
-    create: {
-      email: 'dhaarna@yogawithdhaarna.com',
-      passwordHash: defaultPasswordHash,
-      name: 'Dhaarna Sharma',
-    },
-  });
-  console.log('✅ Admin account seeded: dhaarna@yogawithdhaarna.com');
+  // 1. Admin account is NOT seeded (no default credentials).
+  //    Run `node scripts/set-admin-password.js` to create or reset it.
 
   // 2. Seed Settings
   await prisma.settings.upsert({

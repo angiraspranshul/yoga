@@ -1,10 +1,12 @@
 import React from 'react';
 import { getOrders } from '@/lib/db';
+import { requireAdminPage } from '@/lib/auth';
 import OrdersClient from './OrdersClient';
 
 export const revalidate = 0;
 
 export default async function AdminOrdersPage() {
+  await requireAdminPage();
   const orders = await getOrders();
 
   return (

@@ -57,8 +57,8 @@ async function main() {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      email: 'dhaarna@yogawithdhaarna.com',
-      password: 'admin_password_123',
+      email: process.env.TEST_ADMIN_EMAIL,
+      password: process.env.TEST_ADMIN_PASSWORD,
     }),
   });
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { getOrders, getOrderById, getSettings } from '@/lib/db';
+import { getOrderById, getSettings } from '@/lib/db';
 import { CheckCircle2, Instagram, ArrowRight, ShieldCheck, Mail } from 'lucide-react';
 
 export const revalidate = 0;
@@ -13,11 +13,44 @@ interface SuccessPageProps {
 }
 
 export default async function BookingSuccessPage({ searchParams }: SuccessPageProps) {
-  const bookingId = searchParams.bookingId;
+  // Only show the booking the visitor was redirected with. Never fall back to
+  // another customer's order.
+  const bookingId =
+    typeof searchParams.bookingId === 'string' && /^[a-z0-9]{20,40}$/i.test(searchParams.bookingId)
+      ? searchParams.bookingId
+      : null;
   const [order, settings] = await Promise.all([
-    bookingId ? getOrderById(bookingId) : (await getOrders())[0],
+    bookingId ? getOrderById(bookingId) : Promise.resolve(null),
     getSettings(),
   ]);
+
+  if (!order) {
+    return (
+      <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
+        <Navbar settings={settings} />
+        <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto">
+          <div className="bg-white/90 rounded-3xl p-8 sm:p-12 border border-olive/10 text-center space-y-4 shadow-sm">
+            <h1 className="text-2xl sm:text-3xl font-serif italic text-olive">Booking not found</h1>
+            <p className="text-sm text-olive/70 font-light">
+              We couldn&apos;t find this booking reference. If you just enrolled, please check your email or
+              contact us at{' '}
+              <a href={`mailto:${settings.notificationEmail}`} className="underline">
+                {settings.notificationEmail}
+              </a>
+              .
+            </p>
+            <a
+              href="/"
+              className="inline-block px-7 py-3 rounded-full text-xs font-medium tracking-wide bg-olive text-cream hover:bg-olive-light transition-all"
+            >
+              Return to Home
+            </a>
+          </div>
+        </div>
+        <Footer settings={settings} />
+      </main>
+    );
+  }
 
   const orderStatus = order?.status || 'NEW';
   const statusBadgeClass =
@@ -86,10 +119,11 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
                 </div>
               </div>
 
-              {order?.healthNotes && (
+              {/* Health notes are intentionally not shown here: this URL can end up in
+                  browser history or be shared. They are only visible in the admin panel. */}
+              {order.healthNotes && (
                 <div className="pt-2 border-t border-olive/10 text-xs">
-                  <span className="text-olive/60 block">Intake Notes Submitted:</span>
-                  <span className="text-olive/80 italic font-light">{order.healthNotes}</span>
+                  <span className="text-olive/60 block">Health &amp; alignment intake received</span>
                 </div>
               )}
             </div>
