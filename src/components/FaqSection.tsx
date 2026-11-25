@@ -1,93 +1,43 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Minus, Mail } from 'lucide-react';
-import { Settings } from '@/types';
+import { Plus, Minus } from 'lucide-react';
+import { FAQS } from '@/content/home';
 
-interface FaqSectionProps {
-  settings?: Settings | null;
-}
-
-export default function FaqSection({ settings }: FaqSectionProps) {
+export default function FaqSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const instructorName = settings?.instructorName || 'Dhaarna Sharma';
-  const firstName = instructorName.split(' ')[0] || 'Dhaarna';
-  const notificationEmail = settings?.notificationEmail || 'dhaarna@yogawithdhaarna.com';
-
-  const faqs = [
-    {
-      question: `Do I need to be flexible to start yoga with ${firstName}?`,
-      answer:
-        `Not at all. In fact, ${firstName}'s core philosophy is: 'Flexibility is not a prerequisite to start yoga.' Yoga is how you cultivate functional mobility, balance, and ease over time. Every posture is taught with mindful variations and safe props suited to your body.`,
-    },
-    {
-      question: 'How are the live online sessions conducted?',
-      answer:
-        `Sessions are hosted live and interactively over Zoom in small, intimate cohorts of 15 students. This allows ${firstName} to observe your posture in real time, provide personalized verbal alignment cues, and answer questions. High-definition recordings are also archived if you ever miss a morning class.`,
-    },
-    {
-      question: 'I have lower back pain or neck/joint stiffness. Is this safe for me?',
-      answer:
-        `Yes. In our checkout flow, you complete a confidential health and injury intake form. ${firstName} personally reviews your notes before each session, ensuring you receive spine-friendly modifications that decompress the vertebrae without straining your joints.`,
-    },
-    {
-      question: 'What props or equipment do I need at home?',
-      answer:
-        'All you need is a comfortable non-slip yoga mat and breathable clothes. Having a standard yoga block (or sturdy book), a soft strap (or cotton belt), and a small cushion can enhance comfort during restorative postures and seated breathwork.',
-    },
-    {
-      question: 'What happens immediately after I purchase a plan?',
-      answer:
-        `You receive an instant digital confirmation with your class schedule, onboarding instructions, and Zoom link. ${firstName} is automatically notified of your registration and health intake notes, and you will be welcomed into the private student community.`,
-    },
-  ];
-
-  const toggle = (idx: number) => {
-    setOpenIndex(openIndex === idx ? null : idx);
-  };
-
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="divide-y divide-cream-dark border-y border-cream-dark">
-        {faqs.map((faq, idx) => {
-          const isOpen = openIndex === idx;
-          return (
-            <div key={idx} className="py-6 sm:py-8 transition-colors">
+    <div className="mx-auto max-w-3xl divide-y divide-line border-y border-line">
+      {FAQS.map((faq, idx) => {
+        const isOpen = openIndex === idx;
+        const panelId = `faq-panel-${idx}`;
+        return (
+          <div key={faq.question}>
+            <h3>
               <button
-                onClick={() => toggle(idx)}
-                className="w-full text-left flex items-center justify-between gap-6 text-olive hover:text-sage-dark transition-colors"
+                type="button"
+                onClick={() => setOpenIndex(isOpen ? null : idx)}
+                aria-expanded={isOpen}
+                aria-controls={panelId}
+                className="flex w-full items-center justify-between gap-6 py-6 text-left text-umber transition-colors hover:text-clay focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-clay"
               >
-                <span className="text-lg sm:text-2xl font-serif text-olive font-normal leading-snug">
-                  {faq.question}
+                <span className="font-serif text-xl leading-snug sm:text-2xl">{faq.question}</span>
+                <span className="shrink-0 rounded-full border border-line p-2 text-umber-muted">
+                  {isOpen ? <Minus className="h-4 w-4" aria-hidden /> : <Plus className="h-4 w-4" aria-hidden />}
                 </span>
-                <div className="p-2 rounded-full border border-cream-dark text-olive/60 shrink-0 bg-cream">
-                  {isOpen ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                </div>
               </button>
-
-              {isOpen && (
-                <div className="pt-4 pr-12 text-sm sm:text-base text-olive/70 leading-relaxed font-light font-sans">
-                  {faq.answer}
-                </div>
-              )}
+            </h3>
+            <div
+              id={panelId}
+              hidden={!isOpen}
+              className="pb-6 pr-12 font-light leading-relaxed text-umber-light"
+            >
+              {faq.answer}
             </div>
-          );
-        })}
-      </div>
-
-      <div className="text-center pt-2">
-        <p className="text-xs text-olive/60 font-light flex items-center justify-center gap-1.5">
-          <Mail className="w-3.5 h-3.5 text-gold" />
-          <span>Have a specific inquiry? Contact {firstName} directly at </span>
-          <a
-            href={`mailto:${notificationEmail}`}
-            className="text-olive underline underline-offset-4 hover:text-sage-dark font-medium transition-colors"
-          >
-            {notificationEmail}
-          </a>
-        </p>
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

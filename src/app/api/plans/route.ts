@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getPlans, createPlan, INR_PER_USD } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { refreshPublicData } from '@/lib/public-data';
 import { parseJson, planCreateSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
 
     revalidatePath('/', 'layout');
 
+    refreshPublicData('plans');
     return NextResponse.json(newPlan, { status: 201 });
   } catch (error: any) {
     if (error?.code === 'P2002') {

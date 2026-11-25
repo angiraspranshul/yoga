@@ -3,19 +3,58 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #fbf7f1;
+  --foreground: #3e2a26;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism primitives */
+/* Sticky header offset so in-page anchors don't land under it. */
+html {
+  scroll-padding-top: 88px;
+}
+
+@layer components {
+  /* Shared section shell for the public site. */
+  .brand-container {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+  .brand-eyebrow {
+    @apply font-sans text-xs font-medium uppercase tracking-[0.24em];
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-umber px-7 py-3.5 font-sans text-sm font-medium text-ivory transition-colors duration-150 hover:bg-umber-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-umber;
+  }
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-umber/40 px-7 py-3.5 font-sans text-sm font-medium text-umber transition-colors duration-150 hover:border-umber hover:bg-umber/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-umber;
+  }
+  .btn-ivory {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-ivory px-7 py-3.5 font-sans text-sm font-medium text-clay-dark transition-colors duration-150 hover:bg-blush focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ivory;
+  }
+}
+
+/* Softens the edges of the logo artwork's textured background into the
+   matching flat brand colour. Only the plain background margin is faded;
+   the lettering, lotus and tagline sit well inside the opaque area. */
+.logo-fade-rect {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent),
+    linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+  mask-composite: intersect;
+}
+.logo-fade-oval {
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 46%, transparent 74%);
+  mask-image: radial-gradient(ellipse at center, #000 46%, transparent 74%);
+}
+
+/* Glassmorphism primitives (admin screens) */
 .glass-panel {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(16px);
@@ -41,26 +80,46 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-/* Custom sleek scrollbar */
+/* Scrollbar in brand neutrals */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #050505;
+  background: #f3eadf;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #222222;
+  background: #d4b9ae;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  background: #b67b71;
 }
 
-/* Subtle glowing radial utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Subtle glowing radial utilities (admin screens) */
 .glow-emerald-radial {
   background: radial-gradient(circle 600px at 50% 0%, rgba(16, 185, 129, 0.12), transparent 70%);
 }

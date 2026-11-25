@@ -28,7 +28,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     return (
       <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
         <Navbar settings={settings} />
-        <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto">
+        <div className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto">
           <div className="bg-white/90 rounded-3xl p-8 sm:p-12 border border-olive/10 text-center space-y-4 shadow-sm">
             <h1 className="text-2xl sm:text-3xl font-serif italic text-olive">Booking not found</h1>
             <p className="text-sm text-olive/70 font-light">
@@ -66,7 +66,7 @@ export default async function BookingSuccessPage({ searchParams }: SuccessPagePr
     <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
       <Navbar settings={settings} />
 
-      <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto space-y-8">
+      <div className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 max-w-3xl mx-auto space-y-8">
         <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 sm:p-12 border border-olive/10 text-center relative overflow-hidden shadow-sm">
           <div className="relative z-10 space-y-6">
             {/* Success Icon */}

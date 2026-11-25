@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Plan } from '@/types';
 import { Check, Clock, Sparkles, ArrowRight, Activity } from 'lucide-react';
 
@@ -11,7 +12,7 @@ export default function PlanCard({ plan }: PlanCardProps) {
 
   return (
     <div
-      className={`rounded-[1.75rem] p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all duration-300 bg-white border ${
+      className={`rounded-[1.75rem] p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden transition-all duration-150 bg-white border ${
         isFeatured
           ? 'border-sage shadow-md ring-1 ring-sage/30'
           : 'border-cream-dark shadow-sm shadow-olive/5 hover:border-sage/40 hover:shadow-md'
@@ -87,7 +88,7 @@ export default function PlanCard({ plan }: PlanCardProps) {
       </div>
 
       {/* CTA Button */}
-      <a
+      <Link
         href={`/checkout/${plan.id}`}
         className={`w-full py-3.5 px-6 rounded-full text-xs sm:text-sm font-medium flex items-center justify-center gap-2 transition-all duration-200 active:scale-95 shadow-sm ${
           isFeatured
@@ -97,7 +98,7 @@ export default function PlanCard({ plan }: PlanCardProps) {
       >
         <span>Book your spot</span>
         <ArrowRight className="w-4 h-4" />
-      </a>
+      </Link>
     </div>
   );
 }

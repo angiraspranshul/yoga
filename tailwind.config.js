@@ -8,22 +8,45 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        cream: {
-          DEFAULT: '#faf8f4',
-          dark: '#efe9dd',
+        // ---- Dharana brand palette (sampled from the client logo) ----
+        rose: {
+          DEFAULT: '#C99086', // primary: dusty rosy terracotta (logo background)
+          dark: '#B67B71',
         },
+        clay: {
+          DEFAULT: '#8B5D55', // secondary: muted rose brown (ivory text passes AA on it)
+          dark: '#734A43',
+        },
+        blush: {
+          DEFAULT: '#EED5CE', // accent: soft blush pink
+          light: '#F7E9E4',
+        },
+        ivory: '#F6EFE4', // logo lettering colour
+        cream: {
+          DEFAULT: '#FBF7F1', // page background
+          dark: '#EFE4D6',
+        },
+        sand: '#F3EADF',
+        umber: {
+          DEFAULT: '#3E2A26', // body text, passes AA on cream and on rose
+          light: '#5A423C',
+          muted: '#7A6159',
+        },
+        line: '#E6D7CA',
+        // Legacy names kept as aliases so the checkout, plans and admin
+        // screens pick up the brand without being rewritten.
         sage: {
-          DEFAULT: '#6b8f71',
-          dark: '#56755b',
-          light: '#e9efe9',
+          DEFAULT: '#8B5D55',
+          dark: '#734A43',
+          light: '#F7E9E4',
         },
         olive: {
-          DEFAULT: '#2c3320',
-          light: '#3d472c',
+          DEFAULT: '#3E2A26',
+          light: '#5A423C',
         },
         gold: {
-          DEFAULT: '#e6d8b8',
-          dark: '#d4c096',
+          DEFAULT: '#EED5CE',
+          dark: '#D9B3A8',
         },
         uh: {
           sand: '#F5F2E9',
@@ -56,10 +79,10 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-        display: ['"Playfair Display"', '"Barlow Condensed"', 'serif'],
-        mono: ['"Space Grotesk"', 'monospace'],
+        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-heading)', 'Georgia', 'serif'],
+        display: ['var(--font-heading)', 'Georgia', 'serif'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
       },
       backgroundImage: {
         'glow-radial': 'radial-gradient(circle at center, rgba(16, 185, 129, 0.15), transparent 70%)',
@@ -67,6 +90,13 @@ module.exports = {
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'fade-up': 'fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both',
+      },
+      keyframes: {
+        fadeUp: {
+          from: { opacity: '0.001', transform: 'translateY(12px)' },
+          to: { opacity: '1', transform: 'none' },
+        },
       },
     },
   },

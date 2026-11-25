@@ -28,14 +28,14 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
     <main className="min-h-screen bg-cream text-olive selection:bg-sage/30 selection:text-olive">
       <Navbar settings={settings} />
 
-      <div className="pt-32 sm:pt-40 pb-24 px-4 sm:px-6 md:px-8 max-w-5xl mx-auto space-y-8">
+      <div className="pt-12 sm:pt-16 pb-24 px-4 sm:px-6 md:px-8 max-w-5xl mx-auto space-y-8">
         {/* Breadcrumb */}
         <a
-          href="/#classes"
+          href="/plans"
           className="inline-flex items-center gap-2 text-xs font-sans uppercase tracking-widest text-olive/60 hover:text-olive transition-colors group"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
-          <span>Back to Classes &amp; Offerings</span>
+          <span>Back to Yoga Programs</span>
         </a>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

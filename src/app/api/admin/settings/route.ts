@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getSettings, updateSettings } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { refreshPublicData } from '@/lib/public-data';
 import { parseJson, settingsUpdateSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -34,6 +35,7 @@ export async function PUT(request: Request) {
 
     revalidatePath('/', 'layout');
 
+    refreshPublicData('settings');
     return NextResponse.json(updated);
   } catch (error) {
     console.error('Failed to update settings:', error);

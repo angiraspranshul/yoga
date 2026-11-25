@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { getBookablePlanById, updatePlan, deletePlan } from '@/lib/db';
 import { getAdminSession } from '@/lib/auth';
+import { refreshPublicData } from '@/lib/public-data';
 import { parseJson, planUpdateSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
@@ -43,6 +44,7 @@ export async function PUT(
 
     revalidatePath('/', 'layout');
 
+    refreshPublicData('plans');
     return NextResponse.json(updated);
   } catch (error: any) {
     if (error?.code === 'P2002') {
@@ -70,6 +72,7 @@ export async function DELETE(
 
     revalidatePath('/', 'layout');
 
+    refreshPublicData('plans');
     return NextResponse.json({
       success: true,
       result,

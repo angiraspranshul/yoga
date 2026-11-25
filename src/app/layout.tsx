@@ -1,24 +1,53 @@
 import type { Metadata } from 'next';
+import { Cormorant_Garamond, Jost, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 
+const heading = Cormorant_Garamond({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-heading',
+  display: 'swap',
+});
+
+const body = Jost({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600'],
+  variable: '--font-body',
+  display: 'swap',
+});
+
+// Kept for the admin screens, which use it for labels and figures.
+const mono = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  variable: '--font-mono',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Yoga with Dhaarna (@yogawithdhaarna) | Mindful Movement & Alignment',
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://yoga-three-sage.vercel.app'),
+  title: {
+    default: 'Dharana Yoga Academy | Yoga, Retreats, Workshops & Corporate Wellness',
+    template: '%s | Dharana Yoga Academy',
+  },
   description:
-    'Experience mindful movement, spine decompression, and conscious breathwork with Dhaarna Sharma (@yogawithdhaarna). Explore 1-on-1 coaching, monthly online batches, and beginner foundations.',
+    'Dharana (धारणा) is a yoga academy for steady practice and a focused mind: yoga programs, retreats, workshops and corporate wellness, guided with care.',
   keywords: [
-    'Yoga with Dhaarna',
-    'Dhaarna Sharma yoga',
-    'online yoga batch India',
-    'spine health yoga coaching',
-    'mindful breathwork classes',
-    'beginner yoga alignment',
+    'Dharana yoga',
+    'Dharana Yoga Academy',
+    'online yoga classes India',
+    'yoga retreats',
+    'yoga workshops',
+    'corporate yoga',
+    'meditation and pranayama',
   ],
   openGraph: {
-    title: 'Yoga with Dhaarna | Mindful Movement & Safe Alignment',
-    description: 'Flexibility is not a prerequisite to start yoga. Build strength, find calm, and breathe deeply.',
-    url: 'https://www.instagram.com/yogawithdhaarna',
-    siteName: 'Yoga with Dhaarna',
+    title: 'Dharana Yoga Academy',
+    description: 'Yoga programs, retreats, workshops and corporate wellness, guided with care.',
+    siteName: 'Dharana Yoga Academy',
     type: 'website',
+    images: [{ url: '/brand/dharana-logo.jpg', width: 1050, height: 600, alt: 'Dharana logo' }],
   },
 };
 
@@ -28,16 +57,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Space+Grotesk:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-cream text-olive min-h-screen selection:bg-sage selection:text-cream antialiased">
+    <html lang="en" className={`scroll-smooth ${heading.variable} ${body.variable} ${mono.variable}`}>
+      <body className="bg-cream text-umber font-sans min-h-screen selection:bg-blush selection:text-umber antialiased">
         {children}
       </body>
     </html>

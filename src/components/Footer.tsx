@@ -1,6 +1,9 @@
 import React from 'react';
-import { Instagram, Shield, ArrowUpRight } from 'lucide-react';
+import Link from 'next/link';
+import { Instagram, Mail, MapPin } from 'lucide-react';
 import { Settings } from '@/types';
+import BrandLogo from '@/components/brand/BrandLogo';
+import { NAV_LINKS, SERVICES } from '@/content/home';
 
 interface FooterProps {
   settings?: Settings | null;
@@ -8,105 +11,70 @@ interface FooterProps {
 
 export default function Footer({ settings }: FooterProps) {
   const instructorName = settings?.instructorName || 'Dhaarna Sharma';
-  const firstName = instructorName.split(' ')[0] || 'Dhaarna';
   const instagramHandle = settings?.instagramHandle || '@yogawithdhaarna';
   const instagramUrl = settings?.instagramUrl || 'https://www.instagram.com/yogawithdhaarna';
-  const notificationEmail = settings?.notificationEmail || 'dhaarna@yogawithdhaarna.com';
+  const email = settings?.notificationEmail;
 
   return (
-    <footer className="bg-olive text-cream/80 pt-16 pb-12 border-t border-olive-light">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 pb-12 border-b border-white/10">
-          {/* Brand Col */}
-          <div className="md:col-span-2 space-y-4">
-            <h3 className="font-serif italic text-2xl text-cream font-normal">
-              Yoga with {firstName}
-            </h3>
-            <p className="text-xs sm:text-sm text-cream/70 max-w-md leading-relaxed font-light font-sans">
-              Find stillness. Move with breath. Intimate live cohorts and 1-on-1 personal mentorship
-              guided by RYT-500 Master Teacher {instructorName} in Himachal Pradesh.
-            </p>
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <a
-                href={instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium text-cream bg-white/10 hover:bg-white/15 border border-white/10 transition-colors"
-              >
-                <Instagram className="w-3.5 h-3.5 text-gold" />
-                <span>{instagramHandle}</span>
-                <ArrowUpRight className="w-3 h-3 text-cream/50" />
-              </a>
-              <span className="text-xs text-cream/50">RYT-500 Certified Master Instructor</span>
-            </div>
-          </div>
-
-          {/* Quick Links Col */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-sans font-medium uppercase tracking-widest text-gold">
-              Navigation
-            </h4>
-            <ul className="space-y-2 text-xs sm:text-sm font-light">
-              <li>
-                <a href="#practice" className="hover:text-cream transition-colors">
-                  The Practice
-                </a>
-              </li>
-              <li>
-                <a href="#journey" className="hover:text-cream transition-colors">
-                  The Journey of One Hour
-                </a>
-              </li>
-              <li>
-                <a href="#classes" className="hover:text-cream transition-colors">
-                  Classes &amp; Offerings
-                </a>
-              </li>
-              <li>
-                <a href="#moments" className="hover:text-cream transition-colors">
-                  Moments from the Mat
-                </a>
-              </li>
-              <li>
-                <a href="#faq" className="hover:text-cream transition-colors">
-                  Frequently Asked Questions
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Instructor & Portal Col */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-sans font-medium uppercase tracking-widest text-gold">
-              Instructor Desk
-            </h4>
-            <ul className="space-y-2 text-xs sm:text-sm font-light">
-              <li>
-                <a href="/admin" className="hover:text-cream transition-colors flex items-center gap-1.5">
-                  <Shield className="w-3.5 h-3.5 text-gold" />
-                  <span>Instructor Admin Portal</span>
-                </a>
-              </li>
-              <li>
-                <a href={`mailto:${notificationEmail}`} className="hover:text-cream transition-colors">
-                  {notificationEmail}
-                </a>
-              </li>
-              <li>
-                <span className="text-cream/50 text-xs">
-                  Dharamshala, Himachal Pradesh, India
-                </span>
-              </li>
-            </ul>
-          </div>
+    <footer className="bg-rose text-umber">
+      <div className="brand-container grid gap-12 py-16 sm:py-20 md:grid-cols-12">
+        <div className="space-y-6 md:col-span-5">
+          <BrandLogo variant="lockup" className="w-[200px]" />
+          <p className="max-w-sm font-light leading-relaxed">
+            A yoga academy for a steady body and a focused mind, guided by {instructorName}.
+          </p>
+          <Link href="/#services" className="btn-primary">
+            Explore what we offer
+          </Link>
         </div>
 
-        {/* Bottom copyright */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-cream/50 gap-4 font-light">
-          <p>© {new Date().getFullYear()} Yoga with {firstName}. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            <span>Rooted in mindfulness &amp; classical Hatha tradition</span>
+        <div className="space-y-4 md:col-span-3">
+          <h2 className="brand-eyebrow text-umber">Explore</h2>
+          <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5 md:grid-cols-1">
+            {NAV_LINKS.filter((l) => l.label !== 'Contact').map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="font-light hover:underline hover:underline-offset-4">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="space-y-4 md:col-span-4">
+          <h2 className="brand-eyebrow text-umber">Contact</h2>
+          <ul className="space-y-3 font-light">
+            {email && (
+              <li className="flex items-start gap-3">
+                <Mail className="mt-1 h-4 w-4 shrink-0" aria-hidden />
+                <a href={`mailto:${email}`} className="break-all hover:underline hover:underline-offset-4">
+                  {email}
+                </a>
+              </li>
+            )}
+            <li className="flex items-start gap-3">
+              <Instagram className="mt-1 h-4 w-4 shrink-0" aria-hidden />
+              <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="hover:underline hover:underline-offset-4">
+                {instagramHandle}
+              </a>
+            </li>
+            <li className="flex items-start gap-3">
+              <MapPin className="mt-1 h-4 w-4 shrink-0" aria-hidden />
+              <span>Online classes worldwide · Himachal Pradesh, India</span>
+            </li>
+          </ul>
+          <p className="pt-2 text-sm font-light text-umber">
+            Offerings: {SERVICES.map((s) => s.title).join(' · ')}
           </p>
+        </div>
+      </div>
+
+      <div className="border-t border-umber/15">
+        <div className="brand-container flex flex-col gap-3 py-6 text-sm font-light text-umber sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Dharana Yoga Academy. All rights reserved.</p>
+          <Link href="/admin" prefetch={false} className="hover:underline hover:underline-offset-4">
+            Instructor login
+          </Link>
         </div>
       </div>
     </footer>
